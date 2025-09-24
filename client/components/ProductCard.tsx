@@ -1,6 +1,7 @@
 import { Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/state/cart";
+import { Link, useNavigate } from "react-router-dom";
 
 export type Product = {
   id: string;
@@ -22,6 +23,7 @@ function inr(n: number) {
 
 export function ProductCard({ product }: { product: Product }) {
   const { add } = useCart();
+  const navigate = useNavigate();
   const discount =
     product.mrp && product.mrp > product.price
       ? Math.round(((product.mrp - product.price) / product.mrp) * 100)
@@ -29,7 +31,7 @@ export function ProductCard({ product }: { product: Product }) {
 
   return (
     <div className="group overflow-hidden rounded-lg border border-border bg-card hover:shadow-md transition-shadow">
-      <div className="relative aspect-[4/5] overflow-hidden">
+      <Link to={`/products/${product.id}`} className="relative block aspect-[4/5] overflow-hidden">
         <img
           src={product.image}
           alt={product.title}
@@ -46,12 +48,12 @@ export function ProductCard({ product }: { product: Product }) {
             {discount}% OFF
           </div>
         )}
-      </div>
+      </Link>
       <div className="p-3 sm:p-4">
         <div className="flex items-start justify-between gap-2">
-          <h3 className="font-semibold leading-tight line-clamp-2">
+          <Link to={`/products/${product.id}`} className="font-semibold leading-tight line-clamp-2 hover:underline">
             {product.title}
-          </h3>
+          </Link>
           <div className="text-right">
             <div className="text-sm font-extrabold">{inr(product.price)}</div>
             {product.mrp && product.mrp > product.price && (
@@ -78,14 +80,10 @@ export function ProductCard({ product }: { product: Product }) {
           <Button
             variant="outline"
             className="h-9 px-3"
-            onClick={() =>
-              add({
-                id: product.id,
-                title: product.title,
-                price: product.price,
-                image: product.image,
-              })
-            }
+            onClick={() => {
+              add({ id: product.id, title: product.title, price: product.price, image: product.image });
+              navigate("/cart");
+            }}
           >
             Buy now
           </Button>
