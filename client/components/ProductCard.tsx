@@ -31,7 +31,11 @@ export function ProductCard({ product }: { product: Product }) {
 
   return (
     <div className="group overflow-hidden rounded-lg border border-border bg-card hover:shadow-md transition-shadow">
-      <Link to={`/products/${product.id}`} state={{ product }} className="relative block aspect-[4/5] overflow-hidden">
+      <Link
+        to={`/products/${product.id}`}
+        state={{ product }}
+        className="relative block aspect-[4/5] overflow-hidden"
+      >
         <img
           src={product.image}
           alt={product.title}
@@ -51,7 +55,10 @@ export function ProductCard({ product }: { product: Product }) {
       </Link>
       <div className="p-3 sm:p-4">
         <div className="flex items-start justify-between gap-2">
-          <Link to={`/products/${product.id}`} className="font-semibold leading-tight line-clamp-2 hover:underline">
+          <Link
+            to={`/products/${product.id}`}
+            className="font-semibold leading-tight line-clamp-2 hover:underline"
+          >
             {product.title}
           </Link>
           <div className="text-right">
@@ -81,7 +88,12 @@ export function ProductCard({ product }: { product: Product }) {
             variant="outline"
             className="h-9 px-3"
             onClick={() => {
-              add({ id: product.id, title: product.title, price: product.price, image: product.image });
+              add({
+                id: product.id,
+                title: product.title,
+                price: product.price,
+                image: product.image,
+              });
               navigate("/cart");
             }}
           >

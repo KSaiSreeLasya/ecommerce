@@ -19,7 +19,8 @@ export type AdminProduct = {
   active: boolean;
 };
 
-const ADMIN_PASSWORD = (import.meta.env.VITE_ADMIN_PASSWORD as string | undefined) || undefined;
+const ADMIN_PASSWORD =
+  (import.meta.env.VITE_ADMIN_PASSWORD as string | undefined) || undefined;
 
 function saveLocalProduct(p: any) {
   const raw = localStorage.getItem("demo_products");
@@ -110,7 +111,9 @@ export default function Admin() {
 
       const { data } = await supabase
         .from("products")
-        .select("id,title,price,mrp,images,badges,brand,wattage,panel_type,category,sku,description,active")
+        .select(
+          "id,title,price,mrp,images,badges,brand,wattage,panel_type,category,sku,description,active",
+        )
         .order("created_at", { ascending: false });
       const mapped: AdminProduct[] = (data || []).map((p: any) => ({
         id: p.id,
@@ -147,25 +150,34 @@ export default function Admin() {
     const revenue = totals.reduce((a, b) => a + b, 0);
     const count = orders.length;
     const avg = count ? Math.round(revenue / count) : 0;
-    const productMap: Record<string, { title: string; units: number; revenue: number }> = {};
+    const productMap: Record<
+      string,
+      { title: string; units: number; revenue: number }
+    > = {};
     for (const o of orders) {
       for (const it of o.items || []) {
-        if (!productMap[it.id]) productMap[it.id] = { title: it.title, units: 0, revenue: 0 };
+        if (!productMap[it.id])
+          productMap[it.id] = { title: it.title, units: 0, revenue: 0 };
         productMap[it.id].units += it.qty || 1;
         productMap[it.id].revenue += (it.price || 0) * (it.qty || 1);
       }
     }
-    const top = Object.values(productMap).sort((a, b) => b.units - a.units).slice(0, 5);
+    const top = Object.values(productMap)
+      .sort((a, b) => b.units - a.units)
+      .slice(0, 5);
     return { revenue, count, avg, top };
   }, [orders]);
 
-  if (isAdmin === null) return <section className="container py-12">Checking...</section>;
+  if (isAdmin === null)
+    return <section className="container py-12">Checking...</section>;
 
   if (requirePassword && isAdmin === false)
     return (
       <section className="container py-16 max-w-sm">
         <h1 className="text-2xl font-bold">Admin access</h1>
-        <p className="text-sm text-muted-foreground mt-2">Enter admin password to continue.</p>
+        <p className="text-sm text-muted-foreground mt-2">
+          Enter admin password to continue.
+        </p>
         <div className="mt-4 grid gap-2">
           <input
             type="password"
@@ -187,22 +199,31 @@ export default function Admin() {
     );
 
   const uploadImagesIfNeeded = async (): Promise<string[]> => {
-    if (!imageFiles.length) return product.images ? product.images.split(",").map((s) => s.trim()) : [];
+    if (!imageFiles.length)
+      return product.images
+        ? product.images.split(",").map((s) => s.trim())
+        : [];
     if (!isSupabaseConfigured || !supabase) {
-      alert("To upload files, connect Supabase and create a 'product-images' storage bucket.");
+      alert(
+        "To upload files, connect Supabase and create a 'product-images' storage bucket.",
+      );
       return [];
     }
     const urls: string[] = [];
     for (const file of imageFiles) {
       const path = `${crypto.randomUUID()}-${file.name.replace(/[^a-zA-Z0-9.\-_]/g, "_")}`;
-      const { data, error } = await supabase.storage.from("product-images").upload(path, file, {
-        upsert: false,
-      });
+      const { data, error } = await supabase.storage
+        .from("product-images")
+        .upload(path, file, {
+          upsert: false,
+        });
       if (error) {
         alert(`Failed to upload ${file.name}: ${error.message}`);
         continue;
       }
-      const { data: pub } = supabase.storage.from("product-images").getPublicUrl(data.path);
+      const { data: pub } = supabase.storage
+        .from("product-images")
+        .getPublicUrl(data.path);
       if (pub?.publicUrl) urls.push(pub.publicUrl);
     }
     return urls;
@@ -220,8 +241,15 @@ export default function Admin() {
       sku: product.sku || null,
       mrp: product.mrp ? Number(product.mrp) : null,
       price: Number(product.price),
-      images: [...(product.images ? product.images.split(",").map((s) => s.trim()) : []), ...uploaded],
-      badges: product.badges ? product.badges.split(",").map((s) => s.trim()) : [],
+      images: [
+        ...(product.images
+          ? product.images.split(",").map((s) => s.trim())
+          : []),
+        ...uploaded,
+      ],
+      badges: product.badges
+        ? product.badges.split(",").map((s) => s.trim())
+        : [],
       description: product.description || null,
       active: true,
     };
@@ -363,15 +391,21 @@ export default function Admin() {
         <div className="grid gap-4 sm:grid-cols-3">
           <div className="rounded-lg border border-border bg-background p-4">
             <div className="text-sm text-muted-foreground">Total revenue</div>
-            <div className="mt-1 text-2xl font-extrabold">₹{analytics.revenue.toLocaleString("en-IN")}</div>
+            <div className="mt-1 text-2xl font-extrabold">
+              ₹{analytics.revenue.toLocaleString("en-IN")}
+            </div>
           </div>
           <div className="rounded-lg border border-border bg-background p-4">
             <div className="text-sm text-muted-foreground">Orders</div>
-            <div className="mt-1 text-2xl font-extrabold">{analytics.count}</div>
+            <div className="mt-1 text-2xl font-extrabold">
+              {analytics.count}
+            </div>
           </div>
           <div className="rounded-lg border border-border bg-background p-4">
             <div className="text-sm text-muted-foreground">Avg order value</div>
-            <div className="mt-1 text-2xl font-extrabold">₹{analytics.avg.toLocaleString("en-IN")}</div>
+            <div className="mt-1 text-2xl font-extrabold">
+              ₹{analytics.avg.toLocaleString("en-IN")}
+            </div>
           </div>
         </div>
         {analytics.top.length > 0 && (
@@ -379,7 +413,10 @@ export default function Admin() {
             <div className="text-sm font-semibold">Top products</div>
             <ul className="mt-2 grid gap-2 sm:grid-cols-2">
               {analytics.top.map((p) => (
-                <li key={p.title} className="flex items-center justify-between text-sm">
+                <li
+                  key={p.title}
+                  className="flex items-center justify-between text-sm"
+                >
                   <span className="truncate pr-2">{p.title}</span>
                   <span className="text-muted-foreground">{p.units} units</span>
                 </li>
@@ -398,23 +435,100 @@ export default function Admin() {
       <div className="grid gap-4">
         <h2 className="font-semibold">Add product</h2>
         <div className="grid gap-2 sm:grid-cols-2">
-          <input className="input" placeholder="Title" value={product.title} onChange={(e) => setProduct({ ...product, title: e.target.value })} />
-          <input className="input" placeholder="Brand" value={product.brand} onChange={(e) => setProduct({ ...product, brand: e.target.value })} />
-          <input className="input" placeholder="Wattage" type="number" value={product.wattage} onChange={(e) => setProduct({ ...product, wattage: Number(e.target.value) })} />
-          <input className="input" placeholder="Panel type" value={product.panel_type} onChange={(e) => setProduct({ ...product, panel_type: e.target.value })} />
-          <input className="input" placeholder="Category (panel/kit/inverter/accessory)" value={product.category} onChange={(e) => setProduct({ ...product, category: e.target.value })} />
-          <input className="input" placeholder="SKU" value={product.sku} onChange={(e) => setProduct({ ...product, sku: e.target.value })} />
-          <input className="input" placeholder="MRP" type="number" value={product.mrp} onChange={(e) => setProduct({ ...product, mrp: e.target.value })} />
-          <input className="input" placeholder="Price" type="number" value={product.price} onChange={(e) => setProduct({ ...product, price: e.target.value })} />
+          <input
+            className="input"
+            placeholder="Title"
+            value={product.title}
+            onChange={(e) => setProduct({ ...product, title: e.target.value })}
+          />
+          <input
+            className="input"
+            placeholder="Brand"
+            value={product.brand}
+            onChange={(e) => setProduct({ ...product, brand: e.target.value })}
+          />
+          <input
+            className="input"
+            placeholder="Wattage"
+            type="number"
+            value={product.wattage}
+            onChange={(e) =>
+              setProduct({ ...product, wattage: Number(e.target.value) })
+            }
+          />
+          <input
+            className="input"
+            placeholder="Panel type"
+            value={product.panel_type}
+            onChange={(e) =>
+              setProduct({ ...product, panel_type: e.target.value })
+            }
+          />
+          <input
+            className="input"
+            placeholder="Category (panel/kit/inverter/accessory)"
+            value={product.category}
+            onChange={(e) =>
+              setProduct({ ...product, category: e.target.value })
+            }
+          />
+          <input
+            className="input"
+            placeholder="SKU"
+            value={product.sku}
+            onChange={(e) => setProduct({ ...product, sku: e.target.value })}
+          />
+          <input
+            className="input"
+            placeholder="MRP"
+            type="number"
+            value={product.mrp}
+            onChange={(e) => setProduct({ ...product, mrp: e.target.value })}
+          />
+          <input
+            className="input"
+            placeholder="Price"
+            type="number"
+            value={product.price}
+            onChange={(e) => setProduct({ ...product, price: e.target.value })}
+          />
 
           <div className="sm:col-span-2 grid gap-2">
-            <input className="input" placeholder="Image URLs (comma separated) – optional if uploading files" value={product.images} onChange={(e) => setProduct({ ...product, images: e.target.value })} />
-            <input className="input" type="file" accept="image/*" multiple onChange={(e) => setImageFiles(Array.from(e.target.files || []))} />
-            <p className="text-xs text-muted-foreground">Tip: Connect Supabase and create a storage bucket named <strong>product-images</strong> to persist uploaded files.</p>
+            <input
+              className="input"
+              placeholder="Image URLs (comma separated) – optional if uploading files"
+              value={product.images}
+              onChange={(e) =>
+                setProduct({ ...product, images: e.target.value })
+              }
+            />
+            <input
+              className="input"
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={(e) => setImageFiles(Array.from(e.target.files || []))}
+            />
+            <p className="text-xs text-muted-foreground">
+              Tip: Connect Supabase and create a storage bucket named{" "}
+              <strong>product-images</strong> to persist uploaded files.
+            </p>
           </div>
 
-          <input className="input sm:col-span-2" placeholder="Badges (comma separated)" value={product.badges} onChange={(e) => setProduct({ ...product, badges: e.target.value })} />
-          <textarea className="input sm:col-span-2" placeholder="Description" value={product.description} onChange={(e) => setProduct({ ...product, description: e.target.value })} />
+          <input
+            className="input sm:col-span-2"
+            placeholder="Badges (comma separated)"
+            value={product.badges}
+            onChange={(e) => setProduct({ ...product, badges: e.target.value })}
+          />
+          <textarea
+            className="input sm:col-span-2"
+            placeholder="Description"
+            value={product.description}
+            onChange={(e) =>
+              setProduct({ ...product, description: e.target.value })
+            }
+          />
         </div>
         <Button onClick={addProduct}>Add product</Button>
       </div>
@@ -427,7 +541,17 @@ export default function Admin() {
         ) : (
           <div className="grid gap-3">
             {existing.map((p) => (
-              <ProductRow key={p.id} p={p} onChange={(np) => setExisting((prev) => prev.map((x) => (x.id === np.id ? np : x)))} onSave={updateProduct} onDelete={deleteProduct} />
+              <ProductRow
+                key={p.id}
+                p={p}
+                onChange={(np) =>
+                  setExisting((prev) =>
+                    prev.map((x) => (x.id === np.id ? np : x)),
+                  )
+                }
+                onSave={updateProduct}
+                onDelete={deleteProduct}
+              />
             ))}
           </div>
         )}
@@ -439,8 +563,22 @@ export default function Admin() {
           <div className="grid gap-4">
             <h2 className="font-semibold">Add warehouse</h2>
             <div className="grid gap-2 sm:grid-cols-2">
-              <input className="input" placeholder="Name" value={warehouse.name} onChange={(e) => setWarehouse({ ...warehouse, name: e.target.value })} />
-              <input className="input" placeholder="Location" value={warehouse.location} onChange={(e) => setWarehouse({ ...warehouse, location: e.target.value })} />
+              <input
+                className="input"
+                placeholder="Name"
+                value={warehouse.name}
+                onChange={(e) =>
+                  setWarehouse({ ...warehouse, name: e.target.value })
+                }
+              />
+              <input
+                className="input"
+                placeholder="Location"
+                value={warehouse.location}
+                onChange={(e) =>
+                  setWarehouse({ ...warehouse, location: e.target.value })
+                }
+              />
             </div>
             <Button onClick={addWarehouse}>Add warehouse</Button>
           </div>
@@ -448,9 +586,31 @@ export default function Admin() {
           <div className="grid gap-4">
             <h2 className="font-semibold">Set inventory</h2>
             <div className="grid gap-2 sm:grid-cols-3">
-              <input className="input" placeholder="Product ID" value={inventory.product_id} onChange={(e) => setInventory({ ...inventory, product_id: e.target.value })} />
-              <input className="input" placeholder="Warehouse ID" value={inventory.warehouse_id} onChange={(e) => setInventory({ ...inventory, warehouse_id: e.target.value })} />
-              <input className="input" type="number" placeholder="Stock" value={inventory.stock} onChange={(e) => setInventory({ ...inventory, stock: Number(e.target.value) })} />
+              <input
+                className="input"
+                placeholder="Product ID"
+                value={inventory.product_id}
+                onChange={(e) =>
+                  setInventory({ ...inventory, product_id: e.target.value })
+                }
+              />
+              <input
+                className="input"
+                placeholder="Warehouse ID"
+                value={inventory.warehouse_id}
+                onChange={(e) =>
+                  setInventory({ ...inventory, warehouse_id: e.target.value })
+                }
+              />
+              <input
+                className="input"
+                type="number"
+                placeholder="Stock"
+                value={inventory.stock}
+                onChange={(e) =>
+                  setInventory({ ...inventory, stock: Number(e.target.value) })
+                }
+              />
             </div>
             <Button onClick={setStock}>Save inventory</Button>
           </div>
@@ -478,15 +638,57 @@ function ProductRow({
 
   return (
     <div className="grid gap-3 rounded-lg border border-border p-3 sm:grid-cols-6">
-      <input className="input sm:col-span-2" value={local.title} onChange={(e) => setLocal({ ...local, title: e.target.value })} />
-      <input className="input" type="number" value={local.price} onChange={(e) => setLocal({ ...local, price: Number(e.target.value) })} />
-      <input className="input" placeholder="MRP" type="number" value={local.mrp ?? 0} onChange={(e) => setLocal({ ...local, mrp: Number(e.target.value) || null })} />
-      <input className="input sm:col-span-2" placeholder="Image URLs (comma)" value={(local.images || []).join(", ")} onChange={(e) => setLocal({ ...local, images: e.target.value.split(",").map((s) => s.trim()).filter(Boolean) })} />
+      <input
+        className="input sm:col-span-2"
+        value={local.title}
+        onChange={(e) => setLocal({ ...local, title: e.target.value })}
+      />
+      <input
+        className="input"
+        type="number"
+        value={local.price}
+        onChange={(e) => setLocal({ ...local, price: Number(e.target.value) })}
+      />
+      <input
+        className="input"
+        placeholder="MRP"
+        type="number"
+        value={local.mrp ?? 0}
+        onChange={(e) =>
+          setLocal({ ...local, mrp: Number(e.target.value) || null })
+        }
+      />
+      <input
+        className="input sm:col-span-2"
+        placeholder="Image URLs (comma)"
+        value={(local.images || []).join(", ")}
+        onChange={(e) =>
+          setLocal({
+            ...local,
+            images: e.target.value
+              .split(",")
+              .map((s) => s.trim())
+              .filter(Boolean),
+          })
+        }
+      />
       <div className="sm:col-span-6 flex items-center gap-2">
-        <label className="text-sm text-muted-foreground"><input type="checkbox" className="mr-2" checked={local.active} onChange={(e) => setLocal({ ...local, active: e.target.checked })} />Active</label>
+        <label className="text-sm text-muted-foreground">
+          <input
+            type="checkbox"
+            className="mr-2"
+            checked={local.active}
+            onChange={(e) => setLocal({ ...local, active: e.target.checked })}
+          />
+          Active
+        </label>
         <div className="ml-auto flex gap-2">
-          <Button variant="outline" onClick={() => onSave(local)}>Save</Button>
-          <Button variant="destructive" onClick={() => onDelete(local.id)}>Delete</Button>
+          <Button variant="outline" onClick={() => onSave(local)}>
+            Save
+          </Button>
+          <Button variant="destructive" onClick={() => onDelete(local.id)}>
+            Delete
+          </Button>
         </div>
       </div>
     </div>

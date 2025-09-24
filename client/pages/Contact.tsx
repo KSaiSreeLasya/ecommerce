@@ -2,7 +2,12 @@ import { useState } from "react";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 
 export default function Contact() {
-  const [form, setForm] = useState({ name: "", email: "", subject: "", message: "" });
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    subject: "",
+    message: "",
+  });
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
 
@@ -14,7 +19,11 @@ export default function Contact() {
       if (!isSupabaseConfigured || !supabase) {
         const raw = localStorage.getItem("demo_contact_messages");
         const arr = raw ? (JSON.parse(raw) as any[]) : [];
-        arr.unshift({ id: crypto.randomUUID(), ...form, created_at: new Date().toISOString() });
+        arr.unshift({
+          id: crypto.randomUUID(),
+          ...form,
+          created_at: new Date().toISOString(),
+        });
         localStorage.setItem("demo_contact_messages", JSON.stringify(arr));
         setSent(true);
         setForm({ name: "", email: "", subject: "", message: "" });
@@ -78,7 +87,10 @@ export default function Contact() {
           onChange={(e) => setForm({ ...form, message: e.target.value })}
           required
         />
-        <button disabled={sending} className="sm:col-span-2 h-10 rounded-md bg-primary text-primary-foreground disabled:opacity-50">
+        <button
+          disabled={sending}
+          className="sm:col-span-2 h-10 rounded-md bg-primary text-primary-foreground disabled:opacity-50"
+        >
           {sending ? "Sending…" : "Send"}
         </button>
       </form>

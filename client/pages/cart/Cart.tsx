@@ -27,7 +27,12 @@ export default function Cart() {
       const order = {
         id: crypto.randomUUID(),
         email,
-        items: items.map((it) => ({ id: it.id, title: it.title, price: it.price, qty: it.quantity })),
+        items: items.map((it) => ({
+          id: it.id,
+          title: it.title,
+          price: it.price,
+          qty: it.quantity,
+        })),
         total,
         createdAt: Date.now(),
       };

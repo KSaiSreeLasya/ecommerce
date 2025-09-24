@@ -17,7 +17,14 @@ function readLocalProducts(): Product[] {
   try {
     const raw = localStorage.getItem("demo_products");
     const arr = raw ? (JSON.parse(raw) as any[]) : [];
-    return arr.map((p: any) => ({ id: p.id, title: p.title, price: p.price, mrp: p.mrp, image: p.image, badges: p.badges }));
+    return arr.map((p: any) => ({
+      id: p.id,
+      title: p.title,
+      price: p.price,
+      mrp: p.mrp,
+      image: p.image,
+      badges: p.badges,
+    }));
   } catch {
     return [];
   }
@@ -27,8 +34,12 @@ export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
   const navState = (location.state as { product?: Product } | null) || null;
-  const [product, setProduct] = useState<Product | null>(navState?.product ?? null);
-  const [images, setImages] = useState<string[]>(navState?.product ? [navState.product.image] : []);
+  const [product, setProduct] = useState<Product | null>(
+    navState?.product ?? null,
+  );
+  const [images, setImages] = useState<string[]>(
+    navState?.product ? [navState.product.image] : [],
+  );
   const navigate = useNavigate();
   const { add } = useCart();
 
@@ -39,7 +50,9 @@ export default function ProductDetail() {
       if (isSupabaseConfigured && supabase) {
         const { data } = await supabase
           .from("products")
-          .select("id,title,price,mrp,images,badges,description,brand,wattage,panel_type")
+          .select(
+            "id,title,price,mrp,images,badges,description,brand,wattage,panel_type",
+          )
           .eq("id", id)
           .maybeSingle();
         if (data) {
@@ -49,7 +62,8 @@ export default function ProductDetail() {
             price: data.price,
             mrp: data.mrp,
             image:
-              data.images?.[0] || prev?.image ||
+              data.images?.[0] ||
+              prev?.image ||
               "https://images.unsplash.com/photo-1584270354949-1f2f7d1c1447?q=80&w=1200&auto=format&fit=crop",
             badges: data.badges ?? prev?.badges ?? [],
           }));
@@ -80,33 +94,57 @@ export default function ProductDetail() {
     <section className="container py-12 grid gap-8 lg:grid-cols-2">
       <div className="grid gap-3">
         <div className="overflow-hidden rounded-lg border border-border">
-          <img src={images[0] || product.image} alt={product.title} className="w-full object-cover" />
+          <img
+            src={images[0] || product.image}
+            alt={product.title}
+            className="w-full object-cover"
+          />
         </div>
         {images.length > 1 && (
           <div className="flex gap-2 overflow-x-auto">
             {images.map((src, i) => (
-              <button key={i} onClick={() => setImages((prev) => [src, ...prev.filter((x) => x !== src)])} className="h-20 w-20 overflow-hidden rounded border border-border">
-                <img src={src} alt="thumb" className="h-full w-full object-cover" />
+              <button
+                key={i}
+                onClick={() =>
+                  setImages((prev) => [src, ...prev.filter((x) => x !== src)])
+                }
+                className="h-20 w-20 overflow-hidden rounded border border-border"
+              >
+                <img
+                  src={src}
+                  alt="thumb"
+                  className="h-full w-full object-cover"
+                />
               </button>
             ))}
           </div>
         )}
       </div>
       <div>
-        <Link to="/products" className="text-sm text-muted-foreground hover:underline">← Back to products</Link>
+        <Link
+          to="/products"
+          className="text-sm text-muted-foreground hover:underline"
+        >
+          ← Back to products
+        </Link>
         <h1 className="mt-2 text-2xl font-bold">{product.title}</h1>
         <div className="mt-3 flex items-center gap-3">
           <div className="text-2xl font-extrabold">{inr(product.price)}</div>
           {product.mrp && product.mrp > product.price && (
-            <div className="text-sm text-muted-foreground line-through">{inr(product.mrp)}</div>
+            <div className="text-sm text-muted-foreground line-through">
+              {inr(product.mrp)}
+            </div>
           )}
           {discount > 0 && (
-            <div className="rounded bg-accent px-2 py-1 text-xs font-bold text-accent-foreground">{discount}% OFF</div>
+            <div className="rounded bg-accent px-2 py-1 text-xs font-bold text-accent-foreground">
+              {discount}% OFF
+            </div>
           )}
         </div>
         <div className="mt-6 grid gap-3 max-w-prose text-sm text-muted-foreground">
           <p>
-            High‑efficiency mono PERC module built for Indian conditions. Robust frame, excellent low‑light performance and easy installation.
+            High‑efficiency mono PERC module built for Indian conditions. Robust
+            frame, excellent low‑light performance and easy installation.
           </p>
           <ul className="list-disc pl-5">
             <li>Premium quality cells</li>
@@ -116,14 +154,26 @@ export default function ProductDetail() {
         </div>
         <div className="mt-6 flex gap-3">
           <Button
-            onClick={() => add({ id: product.id, title: product.title, price: product.price, image: product.image })}
+            onClick={() =>
+              add({
+                id: product.id,
+                title: product.title,
+                price: product.price,
+                image: product.image,
+              })
+            }
           >
             Add to cart
           </Button>
           <Button
             variant="outline"
             onClick={() => {
-              add({ id: product.id, title: product.title, price: product.price, image: product.image });
+              add({
+                id: product.id,
+                title: product.title,
+                price: product.price,
+                image: product.image,
+              });
               navigate("/cart");
             }}
           >
