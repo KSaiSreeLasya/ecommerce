@@ -54,7 +54,7 @@ export default function Admin() {
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [pass, setPass] = useState("");
   const location = useLocation();
-  const requirePassword = Boolean(ADMIN_PASSWORD) || new URLSearchParams(location.search).has("pw");
+  const requirePassword = true;
 
   const [product, setProduct] = useState({
     title: "",
