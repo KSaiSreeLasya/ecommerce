@@ -1,6 +1,6 @@
 import { useCart } from "@/state/cart";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/lib/supabase";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { useEffect, useState } from "react";
 
 function inr(n: number) {
@@ -16,12 +16,30 @@ export default function Cart() {
   const [email, setEmail] = useState("");
 
   useEffect(() => {
+    if (!isSupabaseConfigured || !supabase) return;
     supabase.auth
       .getUser()
       .then(({ data }) => setEmail(data.user?.email ?? ""));
   }, []);
 
   const placeOrder = async () => {
+    if (!isSupabaseConfigured || !supabase) {
+      const order = {
+        id: crypto.randomUUID(),
+        email,
+        items: items.map((it) => ({ id: it.id, title: it.title, price: it.price, qty: it.quantity })),
+        total,
+        createdAt: Date.now(),
+      };
+      const raw = localStorage.getItem("demo_orders");
+      const arr = raw ? (JSON.parse(raw) as any[]) : [];
+      arr.unshift(order);
+      localStorage.setItem("demo_orders", JSON.stringify(arr));
+      clear();
+      alert("Order placed (demo mode)!");
+      return;
+    }
+
     const { data: order, error } = await supabase
       .from("orders")
       .insert({ email, status: "pending" })
