@@ -65,7 +65,10 @@ export default function Admin() {
     const revenue = totals.reduce((a, b) => a + b, 0);
     const count = orders.length;
     const avg = count ? Math.round(revenue / count) : 0;
-    const productMap: Record<string, { title: string; units: number; revenue: number }> = {};
+    const productMap: Record<
+      string,
+      { title: string; units: number; revenue: number }
+    > = {};
     for (const o of orders) {
       for (const it of o.items || []) {
         if (!productMap[it.id])
@@ -172,7 +175,12 @@ export default function Admin() {
         return { id: p.id, title: p.title, price: p.price, qty };
       });
       const total = items.reduce((s, it) => s + it.price * it.qty, 0);
-      return { id: crypto.randomUUID(), items, total, createdAt: Date.now() - i * 86400000 };
+      return {
+        id: crypto.randomUUID(),
+        items,
+        total,
+        createdAt: Date.now() - i * 86400000,
+      };
     });
     localStorage.setItem("demo_orders", JSON.stringify(orders));
     alert("Demo orders generated. Analytics updated.");
@@ -188,15 +196,21 @@ export default function Admin() {
         <div className="grid gap-4 sm:grid-cols-3">
           <div className="rounded-lg border border-border bg-background p-4">
             <div className="text-sm text-muted-foreground">Total revenue</div>
-            <div className="mt-1 text-2xl font-extrabold">₹{analytics.revenue.toLocaleString("en-IN")}</div>
+            <div className="mt-1 text-2xl font-extrabold">
+              ₹{analytics.revenue.toLocaleString("en-IN")}
+            </div>
           </div>
           <div className="rounded-lg border border-border bg-background p-4">
             <div className="text-sm text-muted-foreground">Orders</div>
-            <div className="mt-1 text-2xl font-extrabold">{analytics.count}</div>
+            <div className="mt-1 text-2xl font-extrabold">
+              {analytics.count}
+            </div>
           </div>
           <div className="rounded-lg border border-border bg-background p-4">
             <div className="text-sm text-muted-foreground">Avg order value</div>
-            <div className="mt-1 text-2xl font-extrabold">₹{analytics.avg.toLocaleString("en-IN")}</div>
+            <div className="mt-1 text-2xl font-extrabold">
+              ₹{analytics.avg.toLocaleString("en-IN")}
+            </div>
           </div>
         </div>
         {analytics.top.length > 0 && (
@@ -204,7 +218,10 @@ export default function Admin() {
             <div className="text-sm font-semibold">Top products</div>
             <ul className="mt-2 grid gap-2 sm:grid-cols-2">
               {analytics.top.map((p) => (
-                <li key={p.title} className="flex items-center justify-between text-sm">
+                <li
+                  key={p.title}
+                  className="flex items-center justify-between text-sm"
+                >
                   <span className="truncate pr-2">{p.title}</span>
                   <span className="text-muted-foreground">{p.units} units</span>
                 </li>
@@ -213,7 +230,9 @@ export default function Admin() {
           </div>
         )}
         <div className="flex gap-3">
-          <Button variant="outline" onClick={generateDemoOrders}>Generate demo orders</Button>
+          <Button variant="outline" onClick={generateDemoOrders}>
+            Generate demo orders
+          </Button>
         </div>
       </div>
 
