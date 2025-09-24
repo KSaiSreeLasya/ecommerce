@@ -18,6 +18,8 @@ export type AdminProduct = {
   active: boolean;
 };
 
+const ADMIN_PASSWORD = (import.meta.env.VITE_ADMIN_PASSWORD as string | undefined) || undefined;
+
 function saveLocalProduct(p: any) {
   const raw = localStorage.getItem("demo_products");
   const arr = raw ? (JSON.parse(raw) as any[]) : [];
@@ -49,6 +51,9 @@ function readLocalOrders() {
 
 export default function Admin() {
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+  const [pass, setPass] = useState("");
+  const requirePassword = Boolean(ADMIN_PASSWORD);
+
   const [product, setProduct] = useState({
     title: "",
     brand: "",
@@ -71,9 +76,17 @@ export default function Admin() {
     stock: 0,
   });
 
-  // Load current user and initial products
+  // Load current user, check password gate, and initial products
   useEffect(() => {
     (async () => {
+      // Password gate takes precedence if configured
+      if (requirePassword) {
+        setExisting(readLocalProducts());
+        const ok = localStorage.getItem("admin_pass_ok") === "1";
+        setIsAdmin(ok);
+        return;
+      }
+
       if (!isSupabaseConfigured || !supabase) {
         setIsAdmin(true); // Demo mode
         setExisting(readLocalProducts());
@@ -114,7 +127,17 @@ export default function Admin() {
       }));
       setExisting(mapped);
     })();
-  }, []);
+  }, [requirePassword]);
+
+  const unlock = () => {
+    if (!requirePassword) return;
+    if (pass === ADMIN_PASSWORD) {
+      localStorage.setItem("admin_pass_ok", "1");
+      setIsAdmin(true);
+    } else {
+      alert("Incorrect password");
+    }
+  };
 
   const orders = readLocalOrders();
   const analytics = useMemo(() => {
@@ -135,6 +158,25 @@ export default function Admin() {
   }, [orders]);
 
   if (isAdmin === null) return <section className="container py-12">Checking...</section>;
+
+  if (requirePassword && isAdmin === false)
+    return (
+      <section className="container py-16 max-w-sm">
+        <h1 className="text-2xl font-bold">Admin access</h1>
+        <p className="text-sm text-muted-foreground mt-2">Enter admin password to continue.</p>
+        <div className="mt-4 grid gap-2">
+          <input
+            type="password"
+            placeholder="Password"
+            value={pass}
+            onChange={(e) => setPass(e.target.value)}
+            className="rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+          />
+          <Button onClick={unlock}>Unlock</Button>
+        </div>
+      </section>
+    );
+
   if (!isAdmin)
     return (
       <section className="container py-12">
@@ -189,7 +231,7 @@ export default function Admin() {
         price: payload.price,
         mrp: payload.mrp,
         image:
-          payload.images?.[0] ??
+          payload.images?.[0] ||
           "https://images.unsplash.com/photo-1584270354949-1f2f7d1c1447?q=80&w=1200&auto=format&fit=crop",
         badges: payload.badges,
       });
@@ -223,20 +265,23 @@ export default function Admin() {
       }
       return;
     }
-    const { error } = await supabase.from("products").update({
-      title: p.title,
-      brand: p.brand,
-      wattage: p.wattage,
-      panel_type: p.panel_type,
-      category: p.category,
-      sku: p.sku,
-      mrp: p.mrp,
-      price: p.price,
-      images: p.images,
-      badges: p.badges,
-      description: p.description,
-      active: p.active,
-    }).eq("id", p.id);
+    const { error } = await supabase
+      .from("products")
+      .update({
+        title: p.title,
+        brand: p.brand,
+        wattage: p.wattage,
+        panel_type: p.panel_type,
+        category: p.category,
+        sku: p.sku,
+        mrp: p.mrp,
+        price: p.price,
+        images: p.images,
+        badges: p.badges,
+        description: p.description,
+        active: p.active,
+      })
+      .eq("id", p.id);
     if (error) alert(error.message);
     else alert("Product updated");
   };
