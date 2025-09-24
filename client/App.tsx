@@ -15,6 +15,7 @@ import Auth from "./pages/auth/Auth";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Layout from "@/components/layout/Layout";
+import ProductDetail from "./pages/products/ProductDetail";
 
 const queryClient = new QueryClient();
 
