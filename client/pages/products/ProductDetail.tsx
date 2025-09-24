@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate, Link, useLocation } from "react-router-dom";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/state/cart";
@@ -25,44 +25,44 @@ function readLocalProducts(): Product[] {
 
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
-  const [product, setProduct] = useState<Product | null>(null);
-  const [images, setImages] = useState<string[]>([]);
+  const location = useLocation();
+  const navState = (location.state as { product?: Product } | null) || null;
+  const [product, setProduct] = useState<Product | null>(navState?.product ?? null);
+  const [images, setImages] = useState<string[]>(navState?.product ? [navState.product.image] : []);
   const navigate = useNavigate();
   const { add } = useCart();
 
   useEffect(() => {
     (async () => {
       if (!id) return;
-      if (!isSupabaseConfigured || !supabase) {
-        // Demo mode: find from local or basic fallback
-        const locals = readLocalProducts();
-        const p = locals.find((x) => x.id === id);
-        if (p) {
-          setProduct(p);
-          setImages([p.image]);
-          return;
-        }
-      }
+      // If we already have product from navigation, still try enhancing with Supabase images
       if (isSupabaseConfigured && supabase) {
-        const { data, error } = await supabase
+        const { data } = await supabase
           .from("products")
           .select("id,title,price,mrp,images,badges,description,brand,wattage,panel_type")
           .eq("id", id)
           .maybeSingle();
-        if (!error && data) {
-          setProduct({
+        if (data) {
+          setProduct((prev) => ({
             id: data.id,
             title: data.title,
             price: data.price,
             mrp: data.mrp,
             image:
-              data.images?.[0] ||
+              data.images?.[0] || prev?.image ||
               "https://images.unsplash.com/photo-1584270354949-1f2f7d1c1447?q=80&w=1200&auto=format&fit=crop",
-            badges: data.badges ?? [],
-          });
+            badges: data.badges ?? prev?.badges ?? [],
+          }));
           setImages(data.images ?? []);
           return;
         }
+      }
+      // Fallback to local products if Supabase is unavailable or item not found
+      const locals = readLocalProducts();
+      const p = locals.find((x) => x.id === id);
+      if (p) {
+        setProduct(p);
+        setImages([p.image]);
       }
     })();
   }, [id]);

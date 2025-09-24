@@ -31,7 +31,7 @@ export function ProductCard({ product }: { product: Product }) {
 
   return (
     <div className="group overflow-hidden rounded-lg border border-border bg-card hover:shadow-md transition-shadow">
-      <Link to={`/products/${product.id}`} className="relative block aspect-[4/5] overflow-hidden">
+      <Link to={`/products/${product.id}`} state={{ product }} className="relative block aspect-[4/5] overflow-hidden">
         <img
           src={product.image}
           alt={product.title}

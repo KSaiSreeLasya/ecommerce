@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
+import { useLocation } from "react-router-dom";
 
 export type AdminProduct = {
   id: string;
@@ -52,7 +53,8 @@ function readLocalOrders() {
 export default function Admin() {
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [pass, setPass] = useState("");
-  const requirePassword = Boolean(ADMIN_PASSWORD);
+  const location = useLocation();
+  const requirePassword = Boolean(ADMIN_PASSWORD) || new URLSearchParams(location.search).has("pw");
 
   const [product, setProduct] = useState({
     title: "",
