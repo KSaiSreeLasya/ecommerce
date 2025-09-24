@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useCart } from "@/state/cart";
-import { supabase } from "@/lib/supabase";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 
 const navItems = [
   { to: "/", label: "Home" },
@@ -20,6 +20,11 @@ export function SiteHeader() {
 
   useEffect(() => {
     (async () => {
+      if (!isSupabaseConfigured || !supabase) {
+        // Demo mode: expose Admin link for local-only demo when no backend
+        setIsAdmin(true);
+        return;
+      }
       const {
         data: { user },
       } = await supabase.auth.getUser();

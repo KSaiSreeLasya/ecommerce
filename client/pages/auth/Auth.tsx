@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 
 export default function Auth() {
@@ -8,10 +8,22 @@ export default function Auth() {
   const [sent, setSent] = useState(false);
 
   useEffect(() => {
+    if (!isSupabaseConfigured || !supabase) return;
     supabase.auth
       .getUser()
       .then(({ data }) => setUserEmail(data.user?.email ?? null));
   }, []);
+
+  if (!isSupabaseConfigured || !supabase) {
+    return (
+      <section className="container py-16 max-w-md">
+        <h1 className="text-2xl font-bold">Authentication unavailable</h1>
+        <p className="text-muted-foreground mt-2">
+          Connect Supabase to enable sign‑in.
+        </p>
+      </section>
+    );
+  }
 
   const send = async () => {
     const { error } = await supabase.auth.signInWithOtp({
