@@ -694,3 +694,43 @@ function ProductRow({
     </div>
   );
 }
+
+function WarehouseRow({
+  w,
+  onChange,
+  onSave,
+  onDelete,
+}: {
+  w: { id: string; name: string; location: string };
+  onChange: (w: { id: string; name: string; location: string }) => void;
+  onSave: (w: { id: string; name: string; location: string }) => void;
+  onDelete: (id: string) => void;
+}) {
+  const [local, setLocal] = useState(w);
+  useEffect(() => setLocal(w), [w]);
+
+  return (
+    <div className="grid gap-3 rounded-lg border border-border p-3 sm:grid-cols-3">
+      <input
+        className="input"
+        placeholder="Name"
+        value={local.name}
+        onChange={(e) => setLocal({ ...local, name: e.target.value })}
+      />
+      <input
+        className="input"
+        placeholder="Location"
+        value={local.location}
+        onChange={(e) => setLocal({ ...local, location: e.target.value })}
+      />
+      <div className="flex items-center gap-2">
+        <Button variant="outline" onClick={() => onSave(local)}>
+          Save
+        </Button>
+        <Button variant="destructive" onClick={() => onDelete(local.id)}>
+          Delete
+        </Button>
+      </div>
+    </div>
+  );
+}
