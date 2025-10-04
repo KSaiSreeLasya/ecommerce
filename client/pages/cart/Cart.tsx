@@ -24,7 +24,7 @@ export default function Cart() {
   }, []);
 
   const placeOrder = async () => {
-    const fallbackLocal = () => {
+    const fallbackLocal = (msg?: string) => {
       const order = {
         id: crypto.randomUUID(),
         email,
@@ -42,10 +42,10 @@ export default function Cart() {
       arr.unshift(order);
       localStorage.setItem("demo_orders", JSON.stringify(arr));
       clear();
-      alert("Order placed (local demo). Connect Supabase for persistence.");
+      toast.success(msg || "Order placed (local demo)");
     };
 
-    if (!isSupabaseConfigured || !supabase) return fallbackLocal();
+    if (!isSupabaseConfigured || !supabase) return fallbackLocal("Order placed (local demo). Connect Supabase for persistence.");
 
     const { data: order, error } = await supabase
       .from("orders")
@@ -53,8 +53,8 @@ export default function Cart() {
       .select("id")
       .single();
     if (error || !order) {
-      alert(`Failed to create order: ${error?.message || "unknown error"}`);
-      return fallbackLocal();
+      console.warn("Failed to create order", error);
+      return fallbackLocal("Order placed (local demo). Connect Supabase for persistence.");
     }
 
     const rows = items.map((it) => ({
@@ -65,11 +65,11 @@ export default function Cart() {
     }));
     const { error: itemsErr } = await supabase.from("order_items").insert(rows);
     if (itemsErr) {
-      alert(`Failed to add items: ${itemsErr.message}`);
-      return fallbackLocal();
+      console.warn("Failed to add order items", itemsErr);
+      return fallbackLocal("Order placed (local demo). Connect Supabase for persistence.");
     }
     clear();
-    alert("Order placed!");
+    toast.success("Order placed!");
   };
 
   return (
