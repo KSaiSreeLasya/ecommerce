@@ -744,7 +744,7 @@ export default function Admin() {
             <div className="grid gap-2 sm:grid-cols-3">
               <input
                 className="input"
-                placeholder="Product ID"
+                placeholder="Product UUID"
                 value={inventory.product_id}
                 onChange={(e) =>
                   setInventory({ ...inventory, product_id: e.target.value })
@@ -752,7 +752,7 @@ export default function Admin() {
               />
               <input
                 className="input"
-                placeholder="Warehouse ID"
+                placeholder="Warehouse UUID"
                 value={inventory.warehouse_id}
                 onChange={(e) =>
                   setInventory({ ...inventory, warehouse_id: e.target.value })
