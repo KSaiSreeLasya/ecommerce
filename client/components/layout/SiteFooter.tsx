@@ -47,7 +47,12 @@ export function SiteFooter() {
       <div className="border-t border-border">
         <div className="container py-6 text-sm text-muted-foreground flex flex-col sm:flex-row items-center justify-between gap-4">
           <p>© {new Date().getFullYear()} AZORIX. All rights reserved.</p>
-          <p className="opacity-80">Crafted with ♥ for modern commerce</p>
+          <div className="flex items-center gap-4">
+            <p className="opacity-80">Crafted with ♥ for modern commerce</p>
+            <a href="/admin" className="underline hover:text-foreground">
+              System
+            </a>
+          </div>
         </div>
       </div>
     </footer>

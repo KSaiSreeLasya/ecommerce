@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "react-router-dom";
+import { toast } from "sonner";
 
 export type AdminProduct = {
   id: string;
@@ -51,6 +52,18 @@ function readLocalOrders() {
   }
 }
 
+function readLocalAnalytics() {
+  try {
+    const raw = localStorage.getItem("demo_analytics");
+    return raw ? (JSON.parse(raw) as any[]) : [];
+  } catch {
+    return [];
+  }
+}
+function writeLocalAnalytics(rows: any[]) {
+  localStorage.setItem("demo_analytics", JSON.stringify(rows));
+}
+
 export default function Admin() {
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [pass, setPass] = useState("");
@@ -78,6 +91,14 @@ export default function Admin() {
     warehouse_id: "",
     stock: 0,
   });
+  const [analyticsRows, setAnalyticsRows] = useState<
+    { id?: string; day: string; orders: number; revenue: number }[]
+  >([]);
+  const [newAnalytics, setNewAnalytics] = useState({
+    day: new Date().toISOString().slice(0, 10),
+    orders: 0,
+    revenue: 0,
+  });
 
   // Load current user, check password gate, and initial products
   useEffect(() => {
@@ -85,6 +106,7 @@ export default function Admin() {
       // Password gate takes precedence if configured
       if (requirePassword) {
         setExisting(readLocalProducts());
+        setAnalyticsRows(readLocalAnalytics());
         const ok = localStorage.getItem("admin_pass_ok") === "1";
         setIsAdmin(ok);
         return;
@@ -93,6 +115,7 @@ export default function Admin() {
       if (!isSupabaseConfigured || !supabase) {
         setIsAdmin(true); // Demo mode
         setExisting(readLocalProducts());
+        setAnalyticsRows(readLocalAnalytics());
         return;
       }
       const {
@@ -131,6 +154,13 @@ export default function Admin() {
         active: Boolean(p.active ?? true),
       }));
       setExisting(mapped);
+
+      // Analytics rows from backend
+      const { data: rows } = await supabase
+        .from("analytics")
+        .select("id,day,orders,revenue")
+        .order("day", { ascending: false });
+      setAnalyticsRows(rows || []);
     })();
   }, [requirePassword]);
 
@@ -140,7 +170,7 @@ export default function Admin() {
       localStorage.setItem("admin_pass_ok", "1");
       setIsAdmin(true);
     } else {
-      alert("Incorrect password");
+      toast.error("Incorrect password");
     }
   };
 
@@ -204,8 +234,8 @@ export default function Admin() {
         ? product.images.split(",").map((s) => s.trim())
         : [];
     if (!isSupabaseConfigured || !supabase) {
-      alert(
-        "To upload files, connect Supabase and create a 'product-images' storage bucket.",
+      toast.error(
+        "Connect Supabase and create a 'product-images' storage bucket to upload.",
       );
       return [];
     }
@@ -218,7 +248,7 @@ export default function Admin() {
           upsert: false,
         });
       if (error) {
-        alert(`Failed to upload ${file.name}: ${error.message}`);
+        toast.error(`Upload failed for ${file.name}: ${error.message}`);
         continue;
       }
       const { data: pub } = supabase.storage
@@ -271,15 +301,15 @@ export default function Admin() {
         },
         ...prev,
       ]);
-      alert("Product added locally (demo mode)");
+      toast.success("Product added locally (demo mode)");
       return;
     }
 
     const { error } = await supabase.from("products").insert(payload);
-    if (error) alert(error.message);
+    if (error) toast.error(error.message);
     else {
       setExisting((prev) => [payload, ...prev]);
-      alert("Product added");
+      toast.success("Product added");
     }
   };
 
@@ -291,7 +321,7 @@ export default function Admin() {
         list[idx] = p;
         writeLocalProducts(list);
         setExisting(list);
-        alert("Product updated locally");
+        toast.success("Product updated locally");
       }
       return;
     }
@@ -312,8 +342,8 @@ export default function Admin() {
         active: p.active,
       })
       .eq("id", p.id);
-    if (error) alert(error.message);
-    else alert("Product updated");
+    if (error) toast.error(error.message);
+    else toast.success("Product updated");
   };
 
   const deleteProduct = async (id: string) => {
@@ -322,27 +352,27 @@ export default function Admin() {
       const next = readLocalProducts().filter((p) => p.id !== id);
       writeLocalProducts(next);
       setExisting(next);
-      alert("Deleted locally");
+      toast.success("Deleted locally");
       return;
     }
     const { error } = await supabase.from("products").delete().eq("id", id);
-    if (error) alert(error.message);
+    if (error) toast.error(error.message);
     else setExisting((prev) => prev.filter((p) => p.id !== id));
   };
 
   const addWarehouse = async () => {
     if (!isSupabaseConfigured || !supabase) {
-      alert("Warehouses require backend. Connect Supabase to enable.");
+      toast.error("Warehouses require backend. Connect Supabase to enable.");
       return;
     }
     const { error } = await supabase.from("warehouses").insert(warehouse);
-    if (error) alert(error.message);
-    else alert("Warehouse added");
+    if (error) toast.error(error.message);
+    else toast.success("Warehouse added");
   };
 
   const setStock = async () => {
     if (!isSupabaseConfigured || !supabase) {
-      alert("Inventory requires backend. Connect Supabase to enable.");
+      toast.error("Inventory requires backend. Connect Supabase to enable.");
       return;
     }
     const { error } = await supabase.from("inventory").upsert({
@@ -350,8 +380,8 @@ export default function Admin() {
       warehouse_id: inventory.warehouse_id,
       stock: Number(inventory.stock),
     });
-    if (error) alert(error.message);
-    else alert("Inventory updated");
+    if (error) toast.error(error.message);
+    else toast.success("Inventory updated");
   };
 
   const generateDemoOrders = () => {
@@ -378,7 +408,65 @@ export default function Admin() {
       };
     });
     localStorage.setItem("demo_orders", JSON.stringify(orders));
-    alert("Demo orders generated. Analytics updated.");
+    toast.success("Demo orders generated. Analytics updated.");
+  };
+
+  // Analytics CRUD
+  const addAnalytics = async () => {
+    if (!isSupabaseConfigured || !supabase) {
+      const list = [{ ...newAnalytics }, ...readLocalAnalytics()];
+      writeLocalAnalytics(list);
+      setAnalyticsRows(list);
+      toast.success("Analytics row added locally");
+      return;
+    }
+    const { error } = await supabase.from("analytics").insert(newAnalytics);
+    if (error) return toast.error(error.message);
+    const { data } = await supabase
+      .from("analytics")
+      .select("id,day,orders,revenue")
+      .order("day", { ascending: false });
+    setAnalyticsRows(data || []);
+    toast.success("Analytics row added");
+  };
+
+  const saveAnalytics = async (row: {
+    id?: string;
+    day: string;
+    orders: number;
+    revenue: number;
+  }) => {
+    if (!isSupabaseConfigured || !supabase) {
+      const list = readLocalAnalytics();
+      const idx = list.findIndex((r: any) => r.day === row.day);
+      if (idx >= 0) list[idx] = row;
+      else list.unshift(row);
+      writeLocalAnalytics(list);
+      setAnalyticsRows(list);
+      toast.success("Analytics updated locally");
+      return;
+    }
+    const { error } = await supabase.from("analytics").upsert(row);
+    if (error) return toast.error(error.message);
+    toast.success("Analytics saved");
+  };
+
+  const deleteAnalytics = async (idOrDay: string) => {
+    if (!confirm("Delete this analytics row?")) return;
+    if (!isSupabaseConfigured || !supabase) {
+      const next = readLocalAnalytics().filter((r: any) => r.day !== idOrDay);
+      writeLocalAnalytics(next);
+      setAnalyticsRows(next);
+      toast.success("Deleted locally");
+      return;
+    }
+    const { error } = await supabase
+      .from("analytics")
+      .delete()
+      .or(`id.eq.${idOrDay},day.eq.${idOrDay}`);
+    if (error) return toast.error(error.message);
+    setAnalyticsRows((prev) => prev.filter((r) => (r.id || r.day) !== idOrDay));
+    toast.success("Deleted");
   };
 
   return (
@@ -391,19 +479,19 @@ export default function Admin() {
         <div className="grid gap-4 sm:grid-cols-3">
           <div className="rounded-lg border border-border bg-background p-4">
             <div className="text-sm text-muted-foreground">Total revenue</div>
-            <div className="mt-1 text-2xl font-extrabold">
+            <div className="mt-1 text-3xl font-extrabold">
               ₹{analytics.revenue.toLocaleString("en-IN")}
             </div>
           </div>
           <div className="rounded-lg border border-border bg-background p-4">
             <div className="text-sm text-muted-foreground">Orders</div>
-            <div className="mt-1 text-2xl font-extrabold">
+            <div className="mt-1 text-3xl font-extrabold">
               {analytics.count}
             </div>
           </div>
           <div className="rounded-lg border border-border bg-background p-4">
             <div className="text-sm text-muted-foreground">Avg order value</div>
-            <div className="mt-1 text-2xl font-extrabold">
+            <div className="mt-1 text-3xl font-extrabold">
               ₹{analytics.avg.toLocaleString("en-IN")}
             </div>
           </div>
@@ -428,6 +516,108 @@ export default function Admin() {
           <Button variant="outline" onClick={generateDemoOrders}>
             Generate demo orders
           </Button>
+        </div>
+
+        {/* Analytics store (CRUD) */}
+        <div className="grid gap-3">
+          <h3 className="font-semibold">Analytics store</h3>
+          <div className="grid gap-2 sm:grid-cols-3">
+            <input
+              className="input"
+              type="date"
+              value={newAnalytics.day}
+              onChange={(e) =>
+                setNewAnalytics({ ...newAnalytics, day: e.target.value })
+              }
+            />
+            <input
+              className="input"
+              type="number"
+              placeholder="Orders"
+              value={newAnalytics.orders}
+              onChange={(e) =>
+                setNewAnalytics({
+                  ...newAnalytics,
+                  orders: Number(e.target.value),
+                })
+              }
+            />
+            <input
+              className="input"
+              type="number"
+              placeholder="Revenue"
+              value={newAnalytics.revenue}
+              onChange={(e) =>
+                setNewAnalytics({
+                  ...newAnalytics,
+                  revenue: Number(e.target.value),
+                })
+              }
+            />
+          </div>
+          <Button onClick={addAnalytics}>Add row</Button>
+          {analyticsRows.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No analytics rows.</p>
+          ) : (
+            <div className="grid gap-2">
+              {analyticsRows.map((r) => (
+                <div
+                  key={r.id || r.day}
+                  className="grid gap-2 sm:grid-cols-5 items-center rounded-lg border border-border p-3"
+                >
+                  <input
+                    className="input"
+                    type="date"
+                    value={r.day}
+                    onChange={(e) =>
+                      setAnalyticsRows((prev) =>
+                        prev.map((x) =>
+                          x === r ? { ...x, day: e.target.value } : x,
+                        ),
+                      )
+                    }
+                  />
+                  <input
+                    className="input"
+                    type="number"
+                    value={r.orders}
+                    onChange={(e) =>
+                      setAnalyticsRows((prev) =>
+                        prev.map((x) =>
+                          x === r
+                            ? { ...x, orders: Number(e.target.value) }
+                            : x,
+                        ),
+                      )
+                    }
+                  />
+                  <input
+                    className="input"
+                    type="number"
+                    value={r.revenue}
+                    onChange={(e) =>
+                      setAnalyticsRows((prev) =>
+                        prev.map((x) =>
+                          x === r
+                            ? { ...x, revenue: Number(e.target.value) }
+                            : x,
+                        ),
+                      )
+                    }
+                  />
+                  <Button variant="outline" onClick={() => saveAnalytics(r)}>
+                    Save
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    onClick={() => deleteAnalytics(r.id || r.day)}
+                  >
+                    Delete
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
@@ -588,7 +778,7 @@ export default function Admin() {
             <div className="grid gap-2 sm:grid-cols-3">
               <input
                 className="input"
-                placeholder="Product ID"
+                placeholder="Product UUID"
                 value={inventory.product_id}
                 onChange={(e) =>
                   setInventory({ ...inventory, product_id: e.target.value })
@@ -596,7 +786,7 @@ export default function Admin() {
               />
               <input
                 className="input"
-                placeholder="Warehouse ID"
+                placeholder="Warehouse UUID"
                 value={inventory.warehouse_id}
                 onChange={(e) =>
                   setInventory({ ...inventory, warehouse_id: e.target.value })
@@ -690,6 +880,46 @@ function ProductRow({
             Delete
           </Button>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function WarehouseRow({
+  w,
+  onChange,
+  onSave,
+  onDelete,
+}: {
+  w: { id: string; name: string; location: string };
+  onChange: (w: { id: string; name: string; location: string }) => void;
+  onSave: (w: { id: string; name: string; location: string }) => void;
+  onDelete: (id: string) => void;
+}) {
+  const [local, setLocal] = useState(w);
+  useEffect(() => setLocal(w), [w]);
+
+  return (
+    <div className="grid gap-3 rounded-lg border border-border p-3 sm:grid-cols-3">
+      <input
+        className="input"
+        placeholder="Name"
+        value={local.name}
+        onChange={(e) => setLocal({ ...local, name: e.target.value })}
+      />
+      <input
+        className="input"
+        placeholder="Location"
+        value={local.location}
+        onChange={(e) => setLocal({ ...local, location: e.target.value })}
+      />
+      <div className="flex items-center gap-2">
+        <Button variant="outline" onClick={() => onSave(local)}>
+          Save
+        </Button>
+        <Button variant="destructive" onClick={() => onDelete(local.id)}>
+          Delete
+        </Button>
       </div>
     </div>
   );
