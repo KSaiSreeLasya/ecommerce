@@ -2,6 +2,7 @@ import { useCart } from "@/state/cart";
 import { Button } from "@/components/ui/button";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 function inr(n: number) {
   return new Intl.NumberFormat("en-IN", {
