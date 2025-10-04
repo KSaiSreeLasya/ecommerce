@@ -170,7 +170,7 @@ export default function Admin() {
       localStorage.setItem("admin_pass_ok", "1");
       setIsAdmin(true);
     } else {
-      alert("Incorrect password");
+      toast.error("Incorrect password");
     }
   };
 
@@ -234,9 +234,7 @@ export default function Admin() {
         ? product.images.split(",").map((s) => s.trim())
         : [];
     if (!isSupabaseConfigured || !supabase) {
-      alert(
-        "To upload files, connect Supabase and create a 'product-images' storage bucket.",
-      );
+      toast.error("Connect Supabase and create a 'product-images' storage bucket to upload.");
       return [];
     }
     const urls: string[] = [];
@@ -248,7 +246,7 @@ export default function Admin() {
           upsert: false,
         });
       if (error) {
-        alert(`Failed to upload ${file.name}: ${error.message}`);
+        toast.error(`Upload failed for ${file.name}: ${error.message}`);
         continue;
       }
       const { data: pub } = supabase.storage
@@ -301,15 +299,15 @@ export default function Admin() {
         },
         ...prev,
       ]);
-      alert("Product added locally (demo mode)");
+      toast.success("Product added locally (demo mode)");
       return;
     }
 
     const { error } = await supabase.from("products").insert(payload);
-    if (error) alert(error.message);
+    if (error) toast.error(error.message);
     else {
       setExisting((prev) => [payload, ...prev]);
-      alert("Product added");
+      toast.success("Product added");
     }
   };
 
@@ -321,7 +319,7 @@ export default function Admin() {
         list[idx] = p;
         writeLocalProducts(list);
         setExisting(list);
-        alert("Product updated locally");
+        toast.success("Product updated locally");
       }
       return;
     }
@@ -342,8 +340,8 @@ export default function Admin() {
         active: p.active,
       })
       .eq("id", p.id);
-    if (error) alert(error.message);
-    else alert("Product updated");
+    if (error) toast.error(error.message);
+    else toast.success("Product updated");
   };
 
   const deleteProduct = async (id: string) => {
@@ -352,27 +350,27 @@ export default function Admin() {
       const next = readLocalProducts().filter((p) => p.id !== id);
       writeLocalProducts(next);
       setExisting(next);
-      alert("Deleted locally");
+      toast.success("Deleted locally");
       return;
     }
     const { error } = await supabase.from("products").delete().eq("id", id);
-    if (error) alert(error.message);
+    if (error) toast.error(error.message);
     else setExisting((prev) => prev.filter((p) => p.id !== id));
   };
 
   const addWarehouse = async () => {
     if (!isSupabaseConfigured || !supabase) {
-      alert("Warehouses require backend. Connect Supabase to enable.");
+      toast.error("Warehouses require backend. Connect Supabase to enable.");
       return;
     }
     const { error } = await supabase.from("warehouses").insert(warehouse);
-    if (error) alert(error.message);
-    else alert("Warehouse added");
+    if (error) toast.error(error.message);
+    else toast.success("Warehouse added");
   };
 
   const setStock = async () => {
     if (!isSupabaseConfigured || !supabase) {
-      alert("Inventory requires backend. Connect Supabase to enable.");
+      toast.error("Inventory requires backend. Connect Supabase to enable.");
       return;
     }
     const { error } = await supabase.from("inventory").upsert({
@@ -380,8 +378,8 @@ export default function Admin() {
       warehouse_id: inventory.warehouse_id,
       stock: Number(inventory.stock),
     });
-    if (error) alert(error.message);
-    else alert("Inventory updated");
+    if (error) toast.error(error.message);
+    else toast.success("Inventory updated");
   };
 
   const generateDemoOrders = () => {
@@ -408,7 +406,7 @@ export default function Admin() {
       };
     });
     localStorage.setItem("demo_orders", JSON.stringify(orders));
-    alert("Demo orders generated. Analytics updated.");
+    toast.success("Demo orders generated. Analytics updated.");
   };
 
   // Analytics CRUD
