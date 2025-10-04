@@ -3,6 +3,14 @@ import { Button } from "@/components/ui/button";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 function inr(n: number) {
   return new Intl.NumberFormat("en-IN", {
@@ -15,6 +23,9 @@ function inr(n: number) {
 export default function Cart() {
   const { items, total, update, remove, clear } = useCart();
   const [email, setEmail] = useState("");
+  const [success, setSuccess] = useState<{ open: boolean; orderId?: string }>(
+    { open: false },
+  );
 
   useEffect(() => {
     if (!isSupabaseConfigured || !supabase) return;
@@ -24,6 +35,22 @@ export default function Cart() {
   }, []);
 
   const placeOrder = async () => {
+    const persistLocalAnalytics = () => {
+      try {
+        const today = new Date().toISOString().slice(0, 10);
+        const raw = localStorage.getItem("demo_analytics");
+        const arr = raw ? (JSON.parse(raw) as any[]) : [];
+        const idx = arr.findIndex((r) => r.day === today);
+        if (idx >= 0) {
+          arr[idx].orders += 1;
+          arr[idx].revenue += total;
+        } else {
+          arr.unshift({ day: today, orders: 1, revenue: total });
+        }
+        localStorage.setItem("demo_analytics", JSON.stringify(arr));
+      } catch {}
+    };
+
     const fallbackLocal = (msg?: string) => {
       const order = {
         id: crypto.randomUUID(),
@@ -41,7 +68,9 @@ export default function Cart() {
       const arr = raw ? (JSON.parse(raw) as any[]) : [];
       arr.unshift(order);
       localStorage.setItem("demo_orders", JSON.stringify(arr));
+      persistLocalAnalytics();
       clear();
+      setSuccess({ open: true, orderId: order.id });
       toast.success(msg || "Order placed (local demo)");
     };
 
@@ -68,7 +97,25 @@ export default function Cart() {
       console.warn("Failed to add order items", itemsErr);
       return fallbackLocal("Order placed (local demo). Connect Supabase for persistence.");
     }
+
+    // Persist analytics (per day aggregate)
+    try {
+      const day = new Date().toISOString().slice(0, 10);
+      const { data: existing } = await supabase
+        .from("analytics")
+        .select("id,day,orders,revenue")
+        .eq("day", day)
+        .maybeSingle();
+      const payload = existing
+        ? { id: existing.id, day, orders: (existing.orders || 0) + 1, revenue: (existing.revenue || 0) + total }
+        : { day, orders: 1, revenue: total };
+      await supabase.from("analytics").upsert(payload);
+    } catch (e) {
+      console.warn("analytics upsert failed", e);
+    }
+
     clear();
+    setSuccess({ open: true, orderId: order.id });
     toast.success("Order placed!");
   };
 
@@ -129,6 +176,30 @@ export default function Cart() {
           </div>
         </div>
       )}
+      <Dialog open={success.open} onOpenChange={(open) => setSuccess((s) => ({ ...s, open }))}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Order placed successfully</DialogTitle>
+            <DialogDescription>
+              Thank you! Your order ID is {success.orderId}. A confirmation has
+              been prepared.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-2 text-sm">
+            <div className="flex items-center justify-between">
+              <span>Items</span>
+              <span>{items.length}</span>
+            </div>
+            <div className="flex items-center justify-between font-semibold">
+              <span>Total</span>
+              <span>{inr(total)}</span>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setSuccess({ open: false })}>Continue shopping</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </section>
   );
 }
