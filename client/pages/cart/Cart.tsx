@@ -13,7 +13,9 @@ import {
 } from "@/components/ui/dialog";
 
 function isUUID(v: string): boolean {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+    v,
+  );
 }
 
 function inr(n: number) {
@@ -27,9 +29,12 @@ function inr(n: number) {
 export default function Cart() {
   const { items, total, update, remove, clear } = useCart();
   const [email, setEmail] = useState("");
-  const [success, setSuccess] = useState<{ open: boolean; orderId?: string; items?: number; total?: number }>(
-    { open: false },
-  );
+  const [success, setSuccess] = useState<{
+    open: boolean;
+    orderId?: string;
+    items?: number;
+    total?: number;
+  }>({ open: false });
 
   useEffect(() => {
     if (!isSupabaseConfigured || !supabase) return;
@@ -79,7 +84,10 @@ export default function Cart() {
       toast.success(msg || "Order placed (local demo)");
     };
 
-    if (!isSupabaseConfigured || !supabase) return fallbackLocal("Order placed (local demo). Connect Supabase for persistence.");
+    if (!isSupabaseConfigured || !supabase)
+      return fallbackLocal(
+        "Order placed (local demo). Connect Supabase for persistence.",
+      );
 
     const { data: order, error } = await supabase
       .from("orders")
@@ -88,7 +96,9 @@ export default function Cart() {
       .single();
     if (error || !order) {
       console.warn("Failed to create order", error);
-      return fallbackLocal("Order placed (local demo). Connect Supabase for persistence.");
+      return fallbackLocal(
+        "Order placed (local demo). Connect Supabase for persistence.",
+      );
     }
 
     const rows = items.map((it) => ({
@@ -100,7 +110,9 @@ export default function Cart() {
     const { error: itemsErr } = await supabase.from("order_items").insert(rows);
     if (itemsErr) {
       console.warn("Failed to add order items", itemsErr);
-      return fallbackLocal("Order placed (local demo). Connect Supabase for persistence.");
+      return fallbackLocal(
+        "Order placed (local demo). Connect Supabase for persistence.",
+      );
     }
 
     // Persist analytics (per day aggregate)
@@ -112,7 +124,12 @@ export default function Cart() {
         .eq("day", day)
         .maybeSingle();
       const payload = existing
-        ? { id: existing.id, day, orders: (existing.orders || 0) + 1, revenue: (existing.revenue || 0) + total }
+        ? {
+            id: existing.id,
+            day,
+            orders: (existing.orders || 0) + 1,
+            revenue: (existing.revenue || 0) + total,
+          }
         : { day, orders: 1, revenue: total };
       await supabase.from("analytics").upsert(payload);
     } catch (e) {
@@ -182,7 +199,10 @@ export default function Cart() {
           </div>
         </div>
       )}
-      <Dialog open={success.open} onOpenChange={(open) => setSuccess((s) => ({ ...s, open }))}>
+      <Dialog
+        open={success.open}
+        onOpenChange={(open) => setSuccess((s) => ({ ...s, open }))}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Order placed successfully</DialogTitle>
@@ -202,7 +222,9 @@ export default function Cart() {
             </div>
           </div>
           <DialogFooter>
-            <Button onClick={() => setSuccess({ open: false })}>Continue shopping</Button>
+            <Button onClick={() => setSuccess({ open: false })}>
+              Continue shopping
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

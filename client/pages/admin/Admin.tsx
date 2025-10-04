@@ -234,7 +234,9 @@ export default function Admin() {
         ? product.images.split(",").map((s) => s.trim())
         : [];
     if (!isSupabaseConfigured || !supabase) {
-      toast.error("Connect Supabase and create a 'product-images' storage bucket to upload.");
+      toast.error(
+        "Connect Supabase and create a 'product-images' storage bucket to upload.",
+      );
       return [];
     }
     const urls: string[] = [];
@@ -524,21 +526,33 @@ export default function Admin() {
               className="input"
               type="date"
               value={newAnalytics.day}
-              onChange={(e) => setNewAnalytics({ ...newAnalytics, day: e.target.value })}
+              onChange={(e) =>
+                setNewAnalytics({ ...newAnalytics, day: e.target.value })
+              }
             />
             <input
               className="input"
               type="number"
               placeholder="Orders"
               value={newAnalytics.orders}
-              onChange={(e) => setNewAnalytics({ ...newAnalytics, orders: Number(e.target.value) })}
+              onChange={(e) =>
+                setNewAnalytics({
+                  ...newAnalytics,
+                  orders: Number(e.target.value),
+                })
+              }
             />
             <input
               className="input"
               type="number"
               placeholder="Revenue"
               value={newAnalytics.revenue}
-              onChange={(e) => setNewAnalytics({ ...newAnalytics, revenue: Number(e.target.value) })}
+              onChange={(e) =>
+                setNewAnalytics({
+                  ...newAnalytics,
+                  revenue: Number(e.target.value),
+                })
+              }
             />
           </div>
           <Button onClick={addAnalytics}>Add row</Button>
@@ -547,14 +561,19 @@ export default function Admin() {
           ) : (
             <div className="grid gap-2">
               {analyticsRows.map((r) => (
-                <div key={r.id || r.day} className="grid gap-2 sm:grid-cols-5 items-center rounded-lg border border-border p-3">
+                <div
+                  key={r.id || r.day}
+                  className="grid gap-2 sm:grid-cols-5 items-center rounded-lg border border-border p-3"
+                >
                   <input
                     className="input"
                     type="date"
                     value={r.day}
                     onChange={(e) =>
                       setAnalyticsRows((prev) =>
-                        prev.map((x) => (x === r ? { ...x, day: e.target.value } : x)),
+                        prev.map((x) =>
+                          x === r ? { ...x, day: e.target.value } : x,
+                        ),
                       )
                     }
                   />
@@ -564,7 +583,11 @@ export default function Admin() {
                     value={r.orders}
                     onChange={(e) =>
                       setAnalyticsRows((prev) =>
-                        prev.map((x) => (x === r ? { ...x, orders: Number(e.target.value) } : x)),
+                        prev.map((x) =>
+                          x === r
+                            ? { ...x, orders: Number(e.target.value) }
+                            : x,
+                        ),
                       )
                     }
                   />
@@ -574,12 +597,23 @@ export default function Admin() {
                     value={r.revenue}
                     onChange={(e) =>
                       setAnalyticsRows((prev) =>
-                        prev.map((x) => (x === r ? { ...x, revenue: Number(e.target.value) } : x)),
+                        prev.map((x) =>
+                          x === r
+                            ? { ...x, revenue: Number(e.target.value) }
+                            : x,
+                        ),
                       )
                     }
                   />
-                  <Button variant="outline" onClick={() => saveAnalytics(r)}>Save</Button>
-                  <Button variant="destructive" onClick={() => deleteAnalytics(r.id || r.day)}>Delete</Button>
+                  <Button variant="outline" onClick={() => saveAnalytics(r)}>
+                    Save
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    onClick={() => deleteAnalytics(r.id || r.day)}
+                  >
+                    Delete
+                  </Button>
                 </div>
               ))}
             </div>
