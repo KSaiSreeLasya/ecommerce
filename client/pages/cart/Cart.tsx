@@ -23,7 +23,7 @@ function inr(n: number) {
 export default function Cart() {
   const { items, total, update, remove, clear } = useCart();
   const [email, setEmail] = useState("");
-  const [success, setSuccess] = useState<{ open: boolean; orderId?: string }>(
+  const [success, setSuccess] = useState<{ open: boolean; orderId?: string; items?: number; total?: number }>(
     { open: false },
   );
 
@@ -69,8 +69,9 @@ export default function Cart() {
       arr.unshift(order);
       localStorage.setItem("demo_orders", JSON.stringify(arr));
       persistLocalAnalytics();
+      const summary = { items: items.length, total };
       clear();
-      setSuccess({ open: true, orderId: order.id });
+      setSuccess({ open: true, orderId: order.id, ...summary });
       toast.success(msg || "Order placed (local demo)");
     };
 
@@ -114,8 +115,9 @@ export default function Cart() {
       console.warn("analytics upsert failed", e);
     }
 
+    const summary = { items: items.length, total };
     clear();
-    setSuccess({ open: true, orderId: order.id });
+    setSuccess({ open: true, orderId: order.id, ...summary });
     toast.success("Order placed!");
   };
 
@@ -188,11 +190,11 @@ export default function Cart() {
           <div className="grid gap-2 text-sm">
             <div className="flex items-center justify-between">
               <span>Items</span>
-              <span>{items.length}</span>
+              <span>{success.items ?? 0}</span>
             </div>
             <div className="flex items-center justify-between font-semibold">
               <span>Total</span>
-              <span>{inr(total)}</span>
+              <span>{inr(success.total ?? 0)}</span>
             </div>
           </div>
           <DialogFooter>
