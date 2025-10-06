@@ -22,28 +22,28 @@ export default function RefundPolicy() {
       <section className="space-y-3">
         <h2 className="text-xl font-semibold">Processing Timeline</h2>
         <p className="text-muted-foreground">
-          Once we receive your returned item, please allow <strong>2–3 business
-          days</strong> for inspection. After approval, most banks post credits
-          within <strong>5–7 business days</strong>. We will email you as soon as
-          the refund is released.
+          Once we receive your returned item, please allow{" "}
+          <strong>2–3 business days</strong> for inspection. After approval,
+          most banks post credits within <strong>5–7 business days</strong>. We
+          will email you as soon as the refund is released.
         </p>
       </section>
 
       <section className="space-y-3">
         <h2 className="text-xl font-semibold">Partial Refunds</h2>
         <p className="text-muted-foreground">
-          We reserve the right to issue partial refunds for items that show signs
-          of use, are missing accessories, or are returned outside the stated
-          window. You will be notified of any adjustment before the refund is
-          finalized.
+          We reserve the right to issue partial refunds for items that show
+          signs of use, are missing accessories, or are returned outside the
+          stated window. You will be notified of any adjustment before the
+          refund is finalized.
         </p>
       </section>
 
       <section className="space-y-3">
         <h2 className="text-xl font-semibold">Shipping Fees</h2>
         <p className="text-muted-foreground">
-          Outbound shipping fees are non-refundable unless the return is due to a
-          shipping error or a defective item. If you opted for expedited
+          Outbound shipping fees are non-refundable unless the return is due to
+          a shipping error or a defective item. If you opted for expedited
           delivery, the service charge will not be reimbursed.
         </p>
       </section>

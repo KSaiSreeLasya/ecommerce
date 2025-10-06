@@ -14,8 +14,8 @@ export default function Disclaimer() {
         <p className="text-muted-foreground">
           We strive to describe products accurately; however, colors, materials,
           and specifications may vary slightly from the images shown. Packaging
-          may be updated by manufacturers without prior notice. Always review the
-          instructions included with your purchase before use.
+          may be updated by manufacturers without prior notice. Always review
+          the instructions included with your purchase before use.
         </p>
       </section>
 
@@ -34,8 +34,8 @@ export default function Disclaimer() {
         <h2 className="text-xl font-semibold">Third-Party Links</h2>
         <p className="text-muted-foreground">
           Our website may include links to third-party resources for your
-          convenience. AZORIX does not endorse or control the content on external
-          sites and is not responsible for losses caused by relying on
+          convenience. AZORIX does not endorse or control the content on
+          external sites and is not responsible for losses caused by relying on
           information found there.
         </p>
       </section>

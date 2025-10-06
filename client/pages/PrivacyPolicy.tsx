@@ -38,7 +38,9 @@ export default function PrivacyPolicy() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-xl font-semibold">Sharing With Service Providers</h2>
+        <h2 className="text-xl font-semibold">
+          Sharing With Service Providers
+        </h2>
         <p className="text-muted-foreground">
           We share information with trusted partners that help us run our
           business, such as payment processors, shipping carriers, and analytics

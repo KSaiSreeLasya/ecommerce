@@ -29,7 +29,9 @@ export default function ReturnPolicy() {
             Print the prepaid return label we provide and securely pack your
             item.
           </li>
-          <li>Drop the package at any carrier location indicated on the label.</li>
+          <li>
+            Drop the package at any carrier location indicated on the label.
+          </li>
         </ol>
         <p className="text-sm text-muted-foreground/80">
           If you checked out as a guest, contact our support team with your
@@ -40,7 +42,9 @@ export default function ReturnPolicy() {
       <section className="space-y-3">
         <h2 className="text-xl font-semibold">Non-Returnable Items</h2>
         <ul className="list-disc pl-5 space-y-2 text-muted-foreground">
-          <li>Final sale or clearance items clearly marked as non-returnable.</li>
+          <li>
+            Final sale or clearance items clearly marked as non-returnable.
+          </li>
           <li>Gift cards, downloadable software, or perishable goods.</li>
           <li>
             Items damaged through improper use or missing essential components.
@@ -68,8 +72,8 @@ export default function ReturnPolicy() {
           >
             support@azorix.shop
           </a>{" "}
-          or call <span className="font-medium">(800) 123-4567</span> for real-time
-          guidance.
+          or call <span className="font-medium">(800) 123-4567</span> for
+          real-time guidance.
         </p>
       </section>
     </section>
