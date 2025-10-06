@@ -146,7 +146,7 @@ export default function ProductDetail() {
               badges:
                 incomingBadges.length > 0
                   ? incomingBadges
-                  : base.badges ?? [],
+                  : (base.badges ?? []),
               description: data.description ?? base.description ?? null,
               brand: data.brand ?? base.brand ?? null,
               wattage: data.wattage ?? base.wattage ?? null,
@@ -188,8 +188,9 @@ export default function ProductDetail() {
   }, [product]);
 
   const offerList = product?.offers?.length ? product.offers : DEFAULT_OFFERS;
-  const highlightList =
-    product?.highlights?.length ? product.highlights : DEFAULT_HIGHLIGHTS;
+  const highlightList = product?.highlights?.length
+    ? product.highlights
+    : DEFAULT_HIGHLIGHTS;
   const warrantyText =
     product?.warranty ?? "25-year performance & 12-year product warranty";
   const deliveryText =
@@ -349,7 +350,9 @@ export default function ProductDetail() {
                 <dt className="text-xs uppercase tracking-wide text-muted-foreground">
                   {row.label}
                 </dt>
-                <dd className="mt-1 font-medium text-foreground">{row.value}</dd>
+                <dd className="mt-1 font-medium text-foreground">
+                  {row.value}
+                </dd>
               </div>
             ))}
           </dl>
