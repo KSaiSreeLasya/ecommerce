@@ -478,7 +478,14 @@ export default function Admin() {
 
   return (
     <section className="container py-12 grid gap-10">
-      <h1 className="text-2xl font-bold">Admin Dashboard</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">Admin Dashboard</h1>
+        {requirePassword && (
+          <Button variant="outline" onClick={lockAdmin}>
+            Lock admin
+          </Button>
+        )}
+      </div>
 
       {/* Analytics */}
       <div className="grid gap-4">
