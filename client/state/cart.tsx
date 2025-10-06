@@ -1,5 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
+import { calculateOfferPricing, type OfferDetail } from "@/lib/offers";
+
 export type CartItem = {
   id: string;
   title: string;
@@ -9,8 +11,6 @@ export type CartItem = {
   mrp?: number | null;
   offer?: OfferDetail | null;
 };
-
-import { calculateOfferPricing, type OfferDetail } from "@/lib/offers";
 
 type AddCartItemInput = Omit<CartItem, "quantity">;
 
