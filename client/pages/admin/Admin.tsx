@@ -405,6 +405,10 @@ export default function Admin() {
       toast.error("Inventory requires backend. Connect Supabase to enable.");
       return;
     }
+    if (!inventory.product_id || !inventory.warehouse_id) {
+      toast.error("Select product and warehouse first");
+      return;
+    }
     const { error } = await supabase.from("inventory").upsert({
       product_id: inventory.product_id,
       warehouse_id: inventory.warehouse_id,
