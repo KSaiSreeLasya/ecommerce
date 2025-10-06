@@ -93,11 +93,11 @@ export default function ProductDetail() {
   return (
     <section className="container py-12 grid gap-8 lg:grid-cols-2">
       <div className="grid gap-3">
-        <div className="overflow-hidden rounded-lg border border-border">
+        <div className="flex aspect-[4/5] items-center justify-center overflow-hidden rounded-lg border border-border bg-muted/30 p-6">
           <img
             src={images[0] || product.image}
             alt={product.title}
-            className="w-full object-cover"
+            className="max-h-full max-w-full object-contain"
           />
         </div>
         {images.length > 1 && (
@@ -108,12 +108,12 @@ export default function ProductDetail() {
                 onClick={() =>
                   setImages((prev) => [src, ...prev.filter((x) => x !== src)])
                 }
-                className="h-20 w-20 overflow-hidden rounded border border-border"
+                className="flex h-20 w-20 items-center justify-center overflow-hidden rounded border border-border bg-muted/20 p-2"
               >
                 <img
                   src={src}
                   alt="thumb"
-                  className="h-full w-full object-cover"
+                  className="max-h-full max-w-full object-contain"
                 />
               </button>
             ))}
