@@ -31,6 +31,61 @@ function readLocalProducts(): Product[] {
   }
 }
 
+const DEFAULT_IMAGE =
+  "https://images.unsplash.com/photo-1584270354949-1f2f7d1c1447?q=80&w=1200&auto=format&fit=crop";
+
+type ProductDetailData = Product & {
+  description?: string | null;
+  brand?: string | null;
+  wattage?: number | null;
+  panel_type?: string | null;
+  offers: string[];
+  highlights: string[];
+  warranty?: string | null;
+  delivery_time?: string | null;
+};
+
+const DEFAULT_OFFERS = [
+  "No-cost EMI starting at ₹8,999/month",
+  "Flat ₹5,000 instant discount on select bank cards",
+  "Free site survey and installation support worth ₹4,999",
+];
+
+const DEFAULT_HIGHLIGHTS = [
+  "High efficiency mono PERC cells with excellent low-light performance",
+  "Weather-sealed junction box with IP68 rating",
+  "Robust anodized aluminium frame engineered for Indian conditions",
+];
+
+function toDetailProduct(base: Product): ProductDetailData {
+  return {
+    ...base,
+    description: null,
+    brand: null,
+    wattage: null,
+    panel_type: null,
+    offers: [],
+    highlights: [],
+    warranty: null,
+    delivery_time: null,
+  };
+}
+
+function normaliseList(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value
+      .map((entry) => (typeof entry === "string" ? entry.trim() : ""))
+      .filter(Boolean);
+  }
+  if (typeof value === "string") {
+    return value
+      .split(/[\n,]+/)
+      .map((entry) => entry.trim())
+      .filter(Boolean);
+  }
+  return [];
+}
+
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
