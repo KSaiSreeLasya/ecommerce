@@ -813,22 +813,34 @@ export default function Admin() {
           <div className="grid gap-4">
             <h2 className="font-semibold">Set inventory</h2>
             <div className="grid gap-2 sm:grid-cols-3">
-              <input
+              <select
                 className="input"
-                placeholder="Product UUID"
                 value={inventory.product_id}
                 onChange={(e) =>
                   setInventory({ ...inventory, product_id: e.target.value })
                 }
-              />
-              <input
+              >
+                <option value="">Select product</option>
+                {productOptions.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.title}
+                  </option>
+                ))}
+              </select>
+              <select
                 className="input"
-                placeholder="Warehouse UUID"
                 value={inventory.warehouse_id}
                 onChange={(e) =>
                   setInventory({ ...inventory, warehouse_id: e.target.value })
                 }
-              />
+              >
+                <option value="">Select warehouse</option>
+                {warehouseOptions.map((w) => (
+                  <option key={w.id} value={w.id}>
+                    {w.name}
+                  </option>
+                ))}
+              </select>
               <input
                 className="input"
                 type="number"
@@ -840,6 +852,7 @@ export default function Admin() {
               />
             </div>
             <Button onClick={setStock}>Save inventory</Button>
+            <p className="text-xs text-muted-foreground">Tip: If selects are empty, first add a product and a warehouse. These fields save stock for the selected (product, warehouse) pair.</p>
           </div>
         </>
       )}
