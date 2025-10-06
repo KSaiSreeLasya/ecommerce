@@ -4,6 +4,7 @@ import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/state/cart";
 import type { Product } from "@/components/ProductCard";
+import { CheckCircle2, ShieldCheck, Sparkles, Truck } from "lucide-react";
 
 function inr(n: number) {
   return new Intl.NumberFormat("en-IN", {
@@ -30,12 +31,67 @@ function readLocalProducts(): Product[] {
   }
 }
 
+const DEFAULT_IMAGE =
+  "https://images.unsplash.com/photo-1584270354949-1f2f7d1c1447?q=80&w=1200&auto=format&fit=crop";
+
+type ProductDetailData = Product & {
+  description?: string | null;
+  brand?: string | null;
+  wattage?: number | null;
+  panel_type?: string | null;
+  offers: string[];
+  highlights: string[];
+  warranty?: string | null;
+  delivery_time?: string | null;
+};
+
+const DEFAULT_OFFERS = [
+  "No-cost EMI starting at ₹8,999/month",
+  "Flat ₹5,000 instant discount on select bank cards",
+  "Free site survey and installation support worth ₹4,999",
+];
+
+const DEFAULT_HIGHLIGHTS = [
+  "High efficiency mono PERC cells with excellent low-light performance",
+  "Weather-sealed junction box with IP68 rating",
+  "Robust anodized aluminium frame engineered for Indian conditions",
+];
+
+function toDetailProduct(base: Product): ProductDetailData {
+  return {
+    ...base,
+    description: null,
+    brand: null,
+    wattage: null,
+    panel_type: null,
+    offers: [],
+    highlights: [],
+    warranty: null,
+    delivery_time: null,
+  };
+}
+
+function normaliseList(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value
+      .map((entry) => (typeof entry === "string" ? entry.trim() : ""))
+      .filter(Boolean);
+  }
+  if (typeof value === "string") {
+    return value
+      .split(/[\n,]+/)
+      .map((entry) => entry.trim())
+      .filter(Boolean);
+  }
+  return [];
+}
+
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
   const navState = (location.state as { product?: Product } | null) || null;
-  const [product, setProduct] = useState<Product | null>(
-    navState?.product ?? null,
+  const [product, setProduct] = useState<ProductDetailData | null>(
+    navState?.product ? toDetailProduct(navState.product) : null,
   );
   const [images, setImages] = useState<string[]>(
     navState?.product ? [navState.product.image] : [],
@@ -51,23 +107,65 @@ export default function ProductDetail() {
         const { data } = await supabase
           .from("products")
           .select(
-            "id,title,price,mrp,images,badges,description,brand,wattage,panel_type",
+            "id,title,price,mrp,images,badges,description,brand,wattage,panel_type,offers,highlights,warranty,delivery_time",
           )
           .eq("id", id)
           .maybeSingle();
         if (data) {
-          setProduct((prev) => ({
-            id: data.id,
-            title: data.title,
-            price: data.price,
-            mrp: data.mrp,
-            image:
-              data.images?.[0] ||
-              prev?.image ||
-              "https://images.unsplash.com/photo-1584270354949-1f2f7d1c1447?q=80&w=1200&auto=format&fit=crop",
-            badges: data.badges ?? prev?.badges ?? [],
-          }));
-          setImages(data.images ?? []);
+          const offers = normaliseList((data as any).offers);
+          const highlights = normaliseList((data as any).highlights);
+          setProduct((prev) => {
+            const existing =
+              prev ??
+              (navState?.product ? toDetailProduct(navState.product) : null);
+            const imageCandidate =
+              (Array.isArray(data.images) && data.images[0]) ||
+              existing?.image ||
+              navState?.product?.image ||
+              DEFAULT_IMAGE;
+            const incomingBadges = Array.isArray(data.badges)
+              ? data.badges
+              : normaliseList(data.badges);
+            const base =
+              existing ??
+              toDetailProduct({
+                id: data.id,
+                title: data.title,
+                price: data.price,
+                mrp: data.mrp,
+                image: imageCandidate,
+                badges: incomingBadges,
+              });
+            return {
+              ...base,
+              id: data.id,
+              title: data.title,
+              price: data.price,
+              mrp: data.mrp,
+              image: imageCandidate,
+              badges:
+                incomingBadges.length > 0
+                  ? incomingBadges
+                  : (base.badges ?? []),
+              description: data.description ?? base.description ?? null,
+              brand: data.brand ?? base.brand ?? null,
+              wattage: data.wattage ?? base.wattage ?? null,
+              panel_type: data.panel_type ?? base.panel_type ?? null,
+              offers: offers.length ? offers : base.offers,
+              highlights: highlights.length ? highlights : base.highlights,
+              warranty: data.warranty ?? base.warranty ?? null,
+              delivery_time: data.delivery_time ?? base.delivery_time ?? null,
+            };
+          });
+          const nextImages =
+            Array.isArray(data.images) && data.images.length
+              ? data.images
+              : [
+                  (Array.isArray(data.images) && data.images[0]) ||
+                    navState?.product?.image ||
+                    DEFAULT_IMAGE,
+                ];
+          setImages(nextImages);
           return;
         }
       }
@@ -75,8 +173,9 @@ export default function ProductDetail() {
       const locals = readLocalProducts();
       const p = locals.find((x) => x.id === id);
       if (p) {
-        setProduct(p);
-        setImages([p.image]);
+        const detailed = toDetailProduct(p);
+        setProduct(detailed);
+        setImages([detailed.image || DEFAULT_IMAGE]);
       }
     })();
   }, [id]);
@@ -88,16 +187,46 @@ export default function ProductDetail() {
       : 0;
   }, [product]);
 
+  const offerList = product?.offers?.length ? product.offers : DEFAULT_OFFERS;
+  const highlightList = product?.highlights?.length
+    ? product.highlights
+    : DEFAULT_HIGHLIGHTS;
+  const warrantyText =
+    product?.warranty ?? "25-year performance & 12-year product warranty";
+  const deliveryText =
+    product?.delivery_time ?? "Delivery in 5-7 business days across India.";
+  const specs = useMemo(() => {
+    if (!product) return [] as { label: string; value: string }[];
+    return [
+      { label: "Brand", value: product.brand || "Not specified" },
+      {
+        label: "Module wattage",
+        value: product.wattage ? `${product.wattage} W` : "Not specified",
+      },
+      { label: "Panel type", value: product.panel_type || "Not specified" },
+      {
+        label: "Badge",
+        value:
+          product.badges && product.badges.length
+            ? product.badges[0]!
+            : "Not specified",
+      },
+    ];
+  }, [product]);
+  const descriptionText =
+    product?.description ??
+    "High-efficiency mono PERC module built for Indian conditions. Robust frame, excellent low-light performance and easy installation.";
+
   if (!product) return <section className="container py-12">Loading…</section>;
 
   return (
     <section className="container py-12 grid gap-8 lg:grid-cols-2">
       <div className="grid gap-3">
-        <div className="overflow-hidden rounded-lg border border-border">
+        <div className="flex aspect-[4/5] items-center justify-center overflow-hidden rounded-lg border border-border bg-muted/30 p-6">
           <img
             src={images[0] || product.image}
             alt={product.title}
-            className="w-full object-cover"
+            className="max-h-full max-w-full object-contain"
           />
         </div>
         {images.length > 1 && (
@@ -108,12 +237,12 @@ export default function ProductDetail() {
                 onClick={() =>
                   setImages((prev) => [src, ...prev.filter((x) => x !== src)])
                 }
-                className="h-20 w-20 overflow-hidden rounded border border-border"
+                className="flex h-20 w-20 items-center justify-center overflow-hidden rounded border border-border bg-muted/20 p-2"
               >
                 <img
                   src={src}
                   alt="thumb"
-                  className="h-full w-full object-cover"
+                  className="max-h-full max-w-full object-contain"
                 />
               </button>
             ))}
@@ -140,17 +269,6 @@ export default function ProductDetail() {
               {discount}% OFF
             </div>
           )}
-        </div>
-        <div className="mt-6 grid gap-3 max-w-prose text-sm text-muted-foreground">
-          <p>
-            High‑efficiency mono PERC module built for Indian conditions. Robust
-            frame, excellent low‑light performance and easy installation.
-          </p>
-          <ul className="list-disc pl-5">
-            <li>Premium quality cells</li>
-            <li>Weather‑sealed junction box</li>
-            <li>25‑year performance warranty</li>
-          </ul>
         </div>
         <div className="mt-6 flex gap-3">
           <Button
@@ -179,6 +297,65 @@ export default function ProductDetail() {
           >
             Buy now
           </Button>
+        </div>
+        <div className="mt-6 grid gap-4 max-w-prose text-sm text-muted-foreground">
+          <p>{descriptionText}</p>
+        </div>
+        <div className="mt-4 flex flex-wrap gap-3 text-sm">
+          <div className="inline-flex items-center gap-2 rounded-md border border-primary/30 bg-primary/10 px-3 py-2 text-primary">
+            <ShieldCheck className="h-4 w-4" />
+            <span className="text-foreground">{warrantyText}</span>
+          </div>
+          <div className="inline-flex items-center gap-2 rounded-md border border-border bg-muted/40 px-3 py-2">
+            <Truck className="h-4 w-4 text-muted-foreground" />
+            <span>{deliveryText}</span>
+          </div>
+        </div>
+        {offerList.length > 0 && (
+          <div className="mt-6 rounded-lg border border-primary/40 bg-primary/5 p-4">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-primary">
+              Offers &amp; deals
+            </h2>
+            <ul className="mt-3 space-y-2 text-sm text-foreground">
+              {offerList.map((offer, index) => (
+                <li key={index} className="flex items-start gap-2">
+                  <Sparkles className="mt-0.5 h-4 w-4 text-primary" />
+                  <span>{offer}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+        {highlightList.length > 0 && (
+          <div className="mt-6">
+            <h2 className="text-base font-semibold">Product highlights</h2>
+            <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
+              {highlightList.map((item, index) => (
+                <li key={index} className="flex items-start gap-2">
+                  <CheckCircle2 className="mt-0.5 h-4 w-4 text-primary" />
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+        <div className="mt-8">
+          <h2 className="text-base font-semibold">Specifications</h2>
+          <dl className="mt-4 grid gap-4 text-sm sm:grid-cols-2">
+            {specs.map((row) => (
+              <div
+                key={row.label}
+                className="rounded border border-border/70 bg-muted/20 p-3"
+              >
+                <dt className="text-xs uppercase tracking-wide text-muted-foreground">
+                  {row.label}
+                </dt>
+                <dd className="mt-1 font-medium text-foreground">
+                  {row.value}
+                </dd>
+              </div>
+            ))}
+          </dl>
         </div>
       </div>
     </section>

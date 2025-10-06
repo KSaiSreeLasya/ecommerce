@@ -187,7 +187,8 @@ export default function Cart() {
               >
                 <img
                   src={it.image}
-                  className="h-16 w-16 rounded object-cover"
+                  alt={it.title}
+                  className="h-16 w-16 shrink-0 rounded bg-muted/30 p-1 object-contain"
                 />
                 <div className="flex-1">
                   <div className="font-medium">{it.title}</div>

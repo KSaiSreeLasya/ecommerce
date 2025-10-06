@@ -1,7 +1,18 @@
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+
 export default function PrivacyPolicy() {
   return (
     <section className="container py-12 max-w-3xl space-y-8">
       <header className="space-y-2">
+        <Button
+          asChild
+          variant="ghost"
+          size="sm"
+          className="h-auto px-0 text-sm font-medium"
+        >
+          <Link to="/">← Back to home</Link>
+        </Button>
         <h1 className="text-3xl font-bold tracking-tight">Privacy Policy</h1>
         <p className="text-muted-foreground">
           Protecting your personal information is a responsibility we take
