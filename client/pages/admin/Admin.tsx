@@ -100,6 +100,13 @@ export default function Admin() {
     revenue: 0,
   });
 
+  const [productOptions, setProductOptions] = useState<
+    { id: string; title: string }[]
+  >([]);
+  const [warehouseOptions, setWarehouseOptions] = useState<
+    { id: string; name: string }[]
+  >([]);
+
   // Load current user, check password gate, and initial products
   useEffect(() => {
     (async () => {
