@@ -5,6 +5,7 @@ import {
   BatteryCharging,
   CheckCircle2,
   Gauge,
+  Info,
   Share2,
   ShieldCheck,
   Sparkles,
