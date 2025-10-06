@@ -4,6 +4,7 @@ import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/state/cart";
 import type { Product } from "@/components/ProductCard";
+import { CheckCircle2, ShieldCheck, Sparkles, Truck } from "lucide-react";
 
 function inr(n: number) {
   return new Intl.NumberFormat("en-IN", {
