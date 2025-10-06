@@ -170,11 +170,44 @@ export default function Admin() {
     })();
   }, [requirePassword]);
 
-  // After unlocking, fetch selectable product/warehouse ids for inventory
+  // After unlocking, fetch data from Supabase (products, analytics, options)
   useEffect(() => {
     (async () => {
       if (!isAdmin) return;
       if (!isSupabaseConfigured || !supabase) return;
+
+      // Products for manage list
+      const { data: prodFull } = await supabase
+        .from("products")
+        .select(
+          "id,title,price,mrp,images,badges,brand,wattage,panel_type,category,sku,description,active",
+        )
+        .order("created_at", { ascending: false });
+      const mapped: AdminProduct[] = (prodFull || []).map((p: any) => ({
+        id: p.id,
+        title: p.title,
+        price: p.price,
+        mrp: p.mrp,
+        images: p.images ?? [],
+        badges: p.badges ?? [],
+        brand: p.brand ?? null,
+        wattage: p.wattage ?? null,
+        panel_type: p.panel_type ?? null,
+        category: p.category ?? "panel",
+        sku: p.sku ?? null,
+        description: p.description ?? null,
+        active: Boolean(p.active ?? true),
+      }));
+      setExisting(mapped);
+
+      // Analytics rows
+      const { data: rows } = await supabase
+        .from("analytics")
+        .select("id,day,orders,revenue")
+        .order("day", { ascending: false });
+      setAnalyticsRows(rows || []);
+
+      // Options for inventory selects
       const { data: products } = await supabase
         .from("products")
         .select("id,title")
@@ -402,9 +435,18 @@ export default function Admin() {
       toast.error("Warehouses require backend. Connect Supabase to enable.");
       return;
     }
-    const { error } = await supabase.from("warehouses").insert(warehouse);
+    const { data, error } = await supabase
+      .from("warehouses")
+      .insert(warehouse)
+      .select("id,name,location")
+      .single();
     if (error) toast.error(error.message);
-    else toast.success("Warehouse added");
+    else {
+      setWarehouseOptions((prev) => [{ id: data!.id, name: data!.name }, ...prev]);
+      setInventory((prev) => ({ ...prev, warehouse_id: data!.id }));
+      setWarehouse({ name: "", location: "" });
+      toast.success("Warehouse added");
+    }
   };
 
   const setStock = async () => {
@@ -489,6 +531,11 @@ export default function Admin() {
     }
     const { error } = await supabase.from("analytics").upsert(row);
     if (error) return toast.error(error.message);
+    const { data } = await supabase
+      .from("analytics")
+      .select("id,day,orders,revenue")
+      .order("day", { ascending: false });
+    setAnalyticsRows(data || []);
     toast.success("Analytics saved");
   };
 
