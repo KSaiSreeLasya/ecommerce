@@ -115,6 +115,31 @@ export default function Cart() {
       );
     }
 
+    // Decrement inventory per product (if inventory rows exist)
+    try {
+      const productIds = rows
+        .map((r) => r.product_id)
+        .filter((id): id is string => Boolean(id));
+      if (productIds.length) {
+        const { data: inventoryRows } = await supabase
+          .from("inventory")
+          .select("id,product_id,stock")
+          .in("product_id", productIds);
+        const qtyByProduct: Record<string, number> = {};
+        for (const r of rows) if (r.product_id)
+          qtyByProduct[r.product_id] = (qtyByProduct[r.product_id] || 0) + r.quantity;
+        for (const inv of inventoryRows || []) {
+          const dec = qtyByProduct[inv.product_id] || 0;
+          if (dec > 0) {
+            const newStock = Math.max(0, (inv.stock || 0) - dec);
+            await supabase.from("inventory").update({ stock: newStock }).eq("id", inv.id);
+          }
+        }
+      }
+    } catch (e) {
+      console.warn("inventory decrement failed", e);
+    }
+
     // Persist analytics (per day aggregate)
     try {
       const day = new Date().toISOString().slice(0, 10);
