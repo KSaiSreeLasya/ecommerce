@@ -115,6 +115,36 @@ export default function Cart() {
       );
     }
 
+    // Decrement inventory per product (if inventory rows exist)
+    try {
+      const productIds = rows
+        .map((r) => r.product_id)
+        .filter((id): id is string => Boolean(id));
+      if (productIds.length) {
+        const { data: inventoryRows } = await supabase
+          .from("inventory")
+          .select("id,product_id,stock")
+          .in("product_id", productIds);
+        const qtyByProduct: Record<string, number> = {};
+        for (const r of rows)
+          if (r.product_id)
+            qtyByProduct[r.product_id] =
+              (qtyByProduct[r.product_id] || 0) + r.quantity;
+        for (const inv of inventoryRows || []) {
+          const dec = qtyByProduct[inv.product_id] || 0;
+          if (dec > 0) {
+            const newStock = Math.max(0, (inv.stock || 0) - dec);
+            await supabase
+              .from("inventory")
+              .update({ stock: newStock })
+              .eq("id", inv.id);
+          }
+        }
+      }
+    } catch (e) {
+      console.warn("inventory decrement failed", e);
+    }
+
     // Persist analytics (per day aggregate)
     try {
       const day = new Date().toISOString().slice(0, 10);
@@ -180,11 +210,17 @@ export default function Cart() {
               </div>
             ))}
           </div>
-          <div className="rounded-lg border border-border p-4 h-fit">
-            <div className="flex items-center justify-between">
-              <span className="font-semibold">Total</span>
-              <span className="font-extrabold">{inr(total)}</span>
+          <div className="rounded-lg border border-border p-4 h-fit sticky top-20">
+            <div className="text-sm text-muted-foreground">
+              Subtotal ({items.length} item{items.length !== 1 ? "s" : ""})
             </div>
+            <div className="mt-1 flex items-baseline justify-between">
+              <span className="font-semibold">Order Total</span>
+              <span className="text-2xl font-extrabold">{inr(total)}</span>
+            </div>
+            <label className="mt-3 inline-flex items-center gap-2 text-sm">
+              <input type="checkbox" /> This order contains a gift
+            </label>
             <div className="mt-4 grid gap-2">
               <input
                 type="email"
@@ -194,7 +230,7 @@ export default function Cart() {
                 onChange={(e) => setEmail(e.target.value)}
                 className="rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
               />
-              <Button onClick={placeOrder}>Place order</Button>
+              <Button onClick={placeOrder}>Proceed to Buy</Button>
             </div>
           </div>
         </div>

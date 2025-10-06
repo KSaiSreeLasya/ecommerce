@@ -100,6 +100,19 @@ export default function Admin() {
     revenue: 0,
   });
 
+  const [productOptions, setProductOptions] = useState<
+    { id: string; title: string }[]
+  >([]);
+  const [warehouseOptions, setWarehouseOptions] = useState<
+    { id: string; name: string }[]
+  >([]);
+  const [warehouses, setWarehouses] = useState<
+    { id: string; name: string; location: string | null }[]
+  >([]);
+  const [inventoryRows, setInventoryRows] = useState<
+    { product_id: string; warehouse_id: string; stock: number }[]
+  >([]);
+
   // Load current user, check password gate, and initial products
   useEffect(() => {
     (async () => {
@@ -107,8 +120,7 @@ export default function Admin() {
       if (requirePassword) {
         setExisting(readLocalProducts());
         setAnalyticsRows(readLocalAnalytics());
-        const ok = localStorage.getItem("admin_pass_ok") === "1";
-        setIsAdmin(ok);
+        setIsAdmin(false);
         return;
       }
 
@@ -164,10 +176,78 @@ export default function Admin() {
     })();
   }, [requirePassword]);
 
+  // After unlocking, fetch data from Supabase (products, analytics, options)
+  useEffect(() => {
+    (async () => {
+      if (!isAdmin) return;
+      if (!isSupabaseConfigured || !supabase) return;
+
+      // Products for manage list
+      const { data: prodFull } = await supabase
+        .from("products")
+        .select(
+          "id,title,price,mrp,images,badges,brand,wattage,panel_type,category,sku,description,active",
+        )
+        .order("created_at", { ascending: false });
+      const mapped: AdminProduct[] = (prodFull || []).map((p: any) => ({
+        id: p.id,
+        title: p.title,
+        price: p.price,
+        mrp: p.mrp,
+        images: p.images ?? [],
+        badges: p.badges ?? [],
+        brand: p.brand ?? null,
+        wattage: p.wattage ?? null,
+        panel_type: p.panel_type ?? null,
+        category: p.category ?? "panel",
+        sku: p.sku ?? null,
+        description: p.description ?? null,
+        active: Boolean(p.active ?? true),
+      }));
+      setExisting(mapped);
+
+      // Analytics rows
+      const { data: rows } = await supabase
+        .from("analytics")
+        .select("id,day,orders,revenue")
+        .order("day", { ascending: false });
+      setAnalyticsRows(rows || []);
+
+      // Options and lists for inventory/warehouses
+      const { data: products } = await supabase
+        .from("products")
+        .select("id,title")
+        .order("title");
+      const prodOpts = (products || []).map((p: any) => ({
+        id: p.id,
+        title: p.title,
+      }));
+      setProductOptions(prodOpts);
+
+      const { data: wh } = await supabase
+        .from("warehouses")
+        .select("id,name,location")
+        .order("name");
+      const whOpts = (wh || []).map((w: any) => ({ id: w.id, name: w.name }));
+      setWarehouseOptions(whOpts);
+      setWarehouses((wh || []) as any);
+
+      const { data: inv } = await supabase
+        .from("inventory")
+        .select("product_id,warehouse_id,stock");
+      setInventoryRows((inv || []) as any);
+
+      setInventory((prev) => ({
+        ...prev,
+        product_id: prev.product_id || prodOpts[0]?.id || "",
+        warehouse_id: prev.warehouse_id || whOpts[0]?.id || "",
+      }));
+    })();
+  }, [isAdmin]);
+
   const unlock = () => {
     if (!requirePassword) return;
     if (pass === ADMIN_PASSWORD) {
-      localStorage.setItem("admin_pass_ok", "1");
       setIsAdmin(true);
     } else {
       toast.error("Incorrect password");
@@ -227,6 +307,13 @@ export default function Admin() {
         Not authorized. Sign in with an admin email.
       </section>
     );
+
+  const logoutAdmin = async () => {
+    try {
+      if (isSupabaseConfigured && supabase) await supabase.auth.signOut();
+    } catch {}
+    setIsAdmin(false);
+  };
 
   const uploadImagesIfNeeded = async (): Promise<string[]> => {
     if (!imageFiles.length)
@@ -365,14 +452,95 @@ export default function Admin() {
       toast.error("Warehouses require backend. Connect Supabase to enable.");
       return;
     }
-    const { error } = await supabase.from("warehouses").insert(warehouse);
+    const { data, error } = await supabase
+      .from("warehouses")
+      .insert(warehouse)
+      .select("id,name,location")
+      .single();
     if (error) toast.error(error.message);
-    else toast.success("Warehouse added");
+    else {
+      setWarehouseOptions((prev) => [
+        { id: data!.id, name: data!.name },
+        ...prev,
+      ]);
+      setWarehouses((prev) => [
+        { id: data!.id, name: data!.name, location: data!.location || null },
+        ...prev,
+      ]);
+      setInventory((prev) => ({ ...prev, warehouse_id: data!.id }));
+      setWarehouse({ name: "", location: "" });
+      toast.success("Warehouse added");
+    }
+  };
+
+  const updateWarehouse = async (w: {
+    id: string;
+    name: string;
+    location: string | null;
+  }) => {
+    if (!isSupabaseConfigured || !supabase) return;
+    const { error } = await supabase
+      .from("warehouses")
+      .update({ name: w.name, location: w.location })
+      .eq("id", w.id);
+    if (error) toast.error(error.message);
+    else toast.success("Warehouse updated");
+  };
+  const deleteWarehouse = async (id: string) => {
+    if (!confirm("Delete this warehouse?")) return;
+    if (!isSupabaseConfigured || !supabase) return;
+    const { error } = await supabase.from("warehouses").delete().eq("id", id);
+    if (error) toast.error(error.message);
+    else {
+      setWarehouses((prev) => prev.filter((x) => x.id !== id));
+      setWarehouseOptions((prev) => prev.filter((x) => x.id !== id));
+      toast.success("Warehouse deleted");
+    }
+  };
+
+  const saveInventoryRow = async (row: {
+    product_id: string;
+    warehouse_id: string;
+    stock: number;
+  }) => {
+    if (!isSupabaseConfigured || !supabase) return;
+    const { error } = await supabase.from("inventory").upsert(row);
+    if (error) toast.error(error.message);
+    else toast.success("Inventory saved");
+  };
+  const deleteInventoryRow = async (row: {
+    product_id: string;
+    warehouse_id: string;
+  }) => {
+    if (!confirm("Delete this inventory row?")) return;
+    if (!isSupabaseConfigured || !supabase) return;
+    const { error } = await supabase
+      .from("inventory")
+      .delete()
+      .eq("product_id", row.product_id)
+      .eq("warehouse_id", row.warehouse_id);
+    if (error) toast.error(error.message);
+    else {
+      setInventoryRows((prev) =>
+        prev.filter(
+          (r) =>
+            !(
+              r.product_id === row.product_id &&
+              r.warehouse_id === row.warehouse_id
+            ),
+        ),
+      );
+      toast.success("Inventory deleted");
+    }
   };
 
   const setStock = async () => {
     if (!isSupabaseConfigured || !supabase) {
       toast.error("Inventory requires backend. Connect Supabase to enable.");
+      return;
+    }
+    if (!inventory.product_id || !inventory.warehouse_id) {
+      toast.error("Select product and warehouse first");
       return;
     }
     const { error } = await supabase.from("inventory").upsert({
@@ -448,6 +616,11 @@ export default function Admin() {
     }
     const { error } = await supabase.from("analytics").upsert(row);
     if (error) return toast.error(error.message);
+    const { data } = await supabase
+      .from("analytics")
+      .select("id,day,orders,revenue")
+      .order("day", { ascending: false });
+    setAnalyticsRows(data || []);
     toast.success("Analytics saved");
   };
 
@@ -471,7 +644,14 @@ export default function Admin() {
 
   return (
     <section className="container py-12 grid gap-10">
-      <h1 className="text-2xl font-bold">Admin Dashboard</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">Admin Dashboard</h1>
+        {requirePassword && (
+          <Button variant="outline" onClick={logoutAdmin}>
+            Logout
+          </Button>
+        )}
+      </div>
 
       {/* Analytics */}
       <div className="grid gap-4">
@@ -484,7 +664,7 @@ export default function Admin() {
             </div>
           </div>
           <div className="rounded-lg border border-border bg-background p-4">
-            <div className="text-sm text-muted-foreground">Orders</div>
+            <div className="text-sm text-muted-foreground">Orders (count)</div>
             <div className="mt-1 text-3xl font-extrabold">
               {analytics.count}
             </div>
@@ -771,27 +951,90 @@ export default function Admin() {
               />
             </div>
             <Button onClick={addWarehouse}>Add warehouse</Button>
+
+            {warehouses.length > 0 && (
+              <div className="grid gap-2 mt-4">
+                <h3 className="text-sm font-semibold">Manage warehouses</h3>
+                {warehouses.map((w) => (
+                  <div
+                    key={w.id}
+                    className="grid gap-2 sm:grid-cols-3 rounded-lg border border-border p-3"
+                  >
+                    <input
+                      className="input"
+                      value={w.name}
+                      onChange={(e) =>
+                        setWarehouses((prev) =>
+                          prev.map((x) =>
+                            x.id === w.id ? { ...x, name: e.target.value } : x,
+                          ),
+                        )
+                      }
+                    />
+                    <input
+                      className="input"
+                      value={w.location || ""}
+                      onChange={(e) =>
+                        setWarehouses((prev) =>
+                          prev.map((x) =>
+                            x.id === w.id
+                              ? { ...x, location: e.target.value }
+                              : x,
+                          ),
+                        )
+                      }
+                    />
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        onClick={() => updateWarehouse(w)}
+                      >
+                        Save
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        onClick={() => deleteWarehouse(w.id)}
+                      >
+                        Delete
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="grid gap-4">
             <h2 className="font-semibold">Set inventory</h2>
             <div className="grid gap-2 sm:grid-cols-3">
-              <input
+              <select
                 className="input"
-                placeholder="Product UUID"
                 value={inventory.product_id}
                 onChange={(e) =>
                   setInventory({ ...inventory, product_id: e.target.value })
                 }
-              />
-              <input
+              >
+                <option value="">Select product</option>
+                {productOptions.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.title}
+                  </option>
+                ))}
+              </select>
+              <select
                 className="input"
-                placeholder="Warehouse UUID"
                 value={inventory.warehouse_id}
                 onChange={(e) =>
                   setInventory({ ...inventory, warehouse_id: e.target.value })
                 }
-              />
+              >
+                <option value="">Select warehouse</option>
+                {warehouseOptions.map((w) => (
+                  <option key={w.id} value={w.id}>
+                    {w.name}
+                  </option>
+                ))}
+              </select>
               <input
                 className="input"
                 type="number"
@@ -803,6 +1046,58 @@ export default function Admin() {
               />
             </div>
             <Button onClick={setStock}>Save inventory</Button>
+            <p className="text-xs text-muted-foreground">
+              Tip: If selects are empty, first add a product and a warehouse.
+              These fields save stock for the selected (product, warehouse)
+              pair.
+            </p>
+
+            {inventoryRows.length > 0 && (
+              <div className="grid gap-2 mt-4">
+                <h3 className="text-sm font-semibold">Inventory list</h3>
+                {inventoryRows.map((r) => (
+                  <div
+                    key={`${r.product_id}-${r.warehouse_id}`}
+                    className="grid gap-2 sm:grid-cols-5 rounded-lg border border-border p-3 items-center"
+                  >
+                    <div className="text-sm truncate">
+                      {productOptions.find((p) => p.id === r.product_id)
+                        ?.title || r.product_id}
+                    </div>
+                    <div className="text-sm truncate">
+                      {warehouseOptions.find((w) => w.id === r.warehouse_id)
+                        ?.name || r.warehouse_id}
+                    </div>
+                    <input
+                      className="input"
+                      type="number"
+                      value={r.stock}
+                      onChange={(e) =>
+                        setInventoryRows((prev) =>
+                          prev.map((x) =>
+                            x === r
+                              ? { ...x, stock: Number(e.target.value) }
+                              : x,
+                          ),
+                        )
+                      }
+                    />
+                    <Button
+                      variant="outline"
+                      onClick={() => saveInventoryRow(r)}
+                    >
+                      Save
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      onClick={() => deleteInventoryRow(r)}
+                    >
+                      Delete
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </>
       )}
