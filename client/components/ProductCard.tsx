@@ -34,12 +34,12 @@ export function ProductCard({ product }: { product: Product }) {
       <Link
         to={`/products/${product.id}`}
         state={{ product }}
-        className="relative block aspect-[4/5] overflow-hidden"
+        className="relative flex aspect-[4/5] items-center justify-center overflow-hidden bg-muted/50 p-4"
       >
         <img
           src={product.image}
           alt={product.title}
-          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+          className="max-h-full max-w-full object-contain transition-transform duration-500 group-hover:scale-105"
           loading="lazy"
         />
         {product.badges?.[0] && (
