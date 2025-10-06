@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 export function SiteFooter() {
   return (
     <footer className="border-t border-border bg-background">
@@ -49,9 +51,9 @@ export function SiteFooter() {
           <p>© {new Date().getFullYear()} AZORIX. All rights reserved.</p>
           <div className="flex items-center gap-4">
             <p className="opacity-80">Crafted with ♥ for modern commerce</p>
-            <a href="/admin" className="underline hover:text-foreground">
+            <Link to="/admin" className="underline hover:text-foreground">
               System
-            </a>
+            </Link>
           </div>
         </div>
       </div>
