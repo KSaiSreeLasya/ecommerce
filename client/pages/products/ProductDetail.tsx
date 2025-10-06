@@ -187,6 +187,35 @@ export default function ProductDetail() {
       : 0;
   }, [product]);
 
+  const offerList = product?.offers?.length ? product.offers : DEFAULT_OFFERS;
+  const highlightList =
+    product?.highlights?.length ? product.highlights : DEFAULT_HIGHLIGHTS;
+  const warrantyText =
+    product?.warranty ?? "25-year performance & 12-year product warranty";
+  const deliveryText =
+    product?.delivery_time ?? "Delivery in 5-7 business days across India.";
+  const specs = useMemo(() => {
+    if (!product) return [] as { label: string; value: string }[];
+    return [
+      { label: "Brand", value: product.brand || "Not specified" },
+      {
+        label: "Module wattage",
+        value: product.wattage ? `${product.wattage} W` : "Not specified",
+      },
+      { label: "Panel type", value: product.panel_type || "Not specified" },
+      {
+        label: "Badge",
+        value:
+          product.badges && product.badges.length
+            ? product.badges[0]!
+            : "Not specified",
+      },
+    ];
+  }, [product]);
+  const descriptionText =
+    product?.description ??
+    "High-efficiency mono PERC module built for Indian conditions. Robust frame, excellent low-light performance and easy installation.";
+
   if (!product) return <section className="container py-12">Loading…</section>;
 
   return (
