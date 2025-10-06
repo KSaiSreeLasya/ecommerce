@@ -333,14 +333,45 @@ export default function Cart() {
       return;
     }
 
-    const { data: order, error } = await supabase
+    const orderPayload: Record<string, unknown> = {
+      email,
+      status: "pending",
+    };
+    if (Number.isFinite(orderTotal)) {
+      orderPayload.total = orderTotal;
+    }
+
+    let orderId: string | null = null;
+    let creationError: unknown = null;
+
+    const initialInsert = await supabase
       .from("orders")
-      .insert({ email, status: "pending", total: orderTotal })
+      .insert(orderPayload)
       .select("id")
       .single();
 
-    if (error || !order) {
-      console.warn("Failed to create order", error);
+    if (initialInsert.error || !initialInsert.data) {
+      creationError = initialInsert.error;
+      if (
+        initialInsert.error?.message &&
+        initialInsert.error.message.includes('column "total"')
+      ) {
+        const retryInsert = await supabase
+          .from("orders")
+          .insert({ email, status: "pending" })
+          .select("id")
+          .single();
+        if (!retryInsert.error && retryInsert.data) {
+          orderId = retryInsert.data.id;
+          creationError = null;
+        }
+      }
+    } else {
+      orderId = initialInsert.data.id;
+    }
+
+    if (!orderId) {
+      console.warn("Failed to create order", creationError);
       fallbackLocal();
       return;
     }
@@ -348,7 +379,7 @@ export default function Cart() {
     const rows = items.map((item) => {
       const offerPricing = calculateOfferPricing(item.price, item.offer);
       return {
-        order_id: order.id,
+        order_id: orderId,
         product_id: /[0-9a-f-]{36}/i.test(item.id) ? item.id : null,
         quantity: item.quantity,
         unit_price: offerPricing.finalPrice,
