@@ -170,6 +170,24 @@ export default function Admin() {
     })();
   }, [requirePassword]);
 
+  // After unlocking, fetch selectable product/warehouse ids for inventory
+  useEffect(() => {
+    (async () => {
+      if (!isAdmin) return;
+      if (!isSupabaseConfigured || !supabase) return;
+      const { data: products } = await supabase
+        .from("products")
+        .select("id,title")
+        .order("title");
+      setProductOptions((products || []).map((p: any) => ({ id: p.id, title: p.title })));
+      const { data: warehouses } = await supabase
+        .from("warehouses")
+        .select("id,name")
+        .order("name");
+      setWarehouseOptions((warehouses || []).map((w: any) => ({ id: w.id, name: w.name })));
+    })();
+  }, [isAdmin]);
+
   const unlock = () => {
     if (!requirePassword) return;
     if (pass === ADMIN_PASSWORD) {
