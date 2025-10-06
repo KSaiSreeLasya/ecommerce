@@ -112,18 +112,60 @@ export default function ProductDetail() {
           .eq("id", id)
           .maybeSingle();
         if (data) {
-          setProduct((prev) => ({
-            id: data.id,
-            title: data.title,
-            price: data.price,
-            mrp: data.mrp,
-            image:
-              data.images?.[0] ||
-              prev?.image ||
-              "https://images.unsplash.com/photo-1584270354949-1f2f7d1c1447?q=80&w=1200&auto=format&fit=crop",
-            badges: data.badges ?? prev?.badges ?? [],
-          }));
-          setImages(data.images ?? []);
+          const offers = normaliseList((data as any).offers);
+          const highlights = normaliseList((data as any).highlights);
+          setProduct((prev) => {
+            const existing =
+              prev ??
+              (navState?.product ? toDetailProduct(navState.product) : null);
+            const imageCandidate =
+              (Array.isArray(data.images) && data.images[0]) ||
+              existing?.image ||
+              navState?.product?.image ||
+              DEFAULT_IMAGE;
+            const incomingBadges = Array.isArray(data.badges)
+              ? data.badges
+              : normaliseList(data.badges);
+            const base =
+              existing ??
+              toDetailProduct({
+                id: data.id,
+                title: data.title,
+                price: data.price,
+                mrp: data.mrp,
+                image: imageCandidate,
+                badges: incomingBadges,
+              });
+            return {
+              ...base,
+              id: data.id,
+              title: data.title,
+              price: data.price,
+              mrp: data.mrp,
+              image: imageCandidate,
+              badges:
+                incomingBadges.length > 0
+                  ? incomingBadges
+                  : base.badges ?? [],
+              description: data.description ?? base.description ?? null,
+              brand: data.brand ?? base.brand ?? null,
+              wattage: data.wattage ?? base.wattage ?? null,
+              panel_type: data.panel_type ?? base.panel_type ?? null,
+              offers: offers.length ? offers : base.offers,
+              highlights: highlights.length ? highlights : base.highlights,
+              warranty: data.warranty ?? base.warranty ?? null,
+              delivery_time: data.delivery_time ?? base.delivery_time ?? null,
+            };
+          });
+          const nextImages =
+            Array.isArray(data.images) && data.images.length
+              ? data.images
+              : [
+                  (Array.isArray(data.images) && data.images[0]) ||
+                    navState?.product?.image ||
+                    DEFAULT_IMAGE,
+                ];
+          setImages(nextImages);
           return;
         }
       }
@@ -131,8 +173,9 @@ export default function ProductDetail() {
       const locals = readLocalProducts();
       const p = locals.find((x) => x.id === id);
       if (p) {
-        setProduct(p);
-        setImages([p.image]);
+        const detailed = toDetailProduct(p);
+        setProduct(detailed);
+        setImages([detailed.image || DEFAULT_IMAGE]);
       }
     })();
   }, [id]);
