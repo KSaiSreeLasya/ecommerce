@@ -206,7 +206,7 @@ function RecommendedSection({
 }
 
 export default function Cart() {
-  const { items, total, update, remove, clear, add } = useCart();
+  const { items, update, remove, clear, add } = useCart();
   const [recommended, setRecommended] = useState<Product[]>([]);
   const [email, setEmail] = useState("");
   const [couponCode, setCouponCode] = useState("");
