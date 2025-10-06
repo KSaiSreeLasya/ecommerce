@@ -106,6 +106,12 @@ export default function Admin() {
   const [warehouseOptions, setWarehouseOptions] = useState<
     { id: string; name: string }[]
   >([]);
+  const [warehouses, setWarehouses] = useState<
+    { id: string; name: string; location: string | null }[]
+  >([]);
+  const [inventoryRows, setInventoryRows] = useState<
+    { product_id: string; warehouse_id: string; stock: number }[]
+  >([]);
 
   // Load current user, check password gate, and initial products
   useEffect(() => {
@@ -207,19 +213,27 @@ export default function Admin() {
         .order("day", { ascending: false });
       setAnalyticsRows(rows || []);
 
-      // Options for inventory selects
+      // Options and lists for inventory/warehouses
       const { data: products } = await supabase
         .from("products")
         .select("id,title")
         .order("title");
       const prodOpts = (products || []).map((p: any) => ({ id: p.id, title: p.title }));
       setProductOptions(prodOpts);
-      const { data: warehouses } = await supabase
+
+      const { data: wh } = await supabase
         .from("warehouses")
-        .select("id,name")
+        .select("id,name,location")
         .order("name");
-      const whOpts = (warehouses || []).map((w: any) => ({ id: w.id, name: w.name }));
+      const whOpts = (wh || []).map((w: any) => ({ id: w.id, name: w.name }));
       setWarehouseOptions(whOpts);
+      setWarehouses((wh || []) as any);
+
+      const { data: inv } = await supabase
+        .from("inventory")
+        .select("product_id,warehouse_id,stock");
+      setInventoryRows((inv || []) as any);
+
       setInventory((prev) => ({
         ...prev,
         product_id: prev.product_id || prodOpts[0]?.id || "",
@@ -443,9 +457,52 @@ export default function Admin() {
     if (error) toast.error(error.message);
     else {
       setWarehouseOptions((prev) => [{ id: data!.id, name: data!.name }, ...prev]);
+      setWarehouses((prev) => [{ id: data!.id, name: data!.name, location: data!.location || null }, ...prev]);
       setInventory((prev) => ({ ...prev, warehouse_id: data!.id }));
       setWarehouse({ name: "", location: "" });
       toast.success("Warehouse added");
+    }
+  };
+
+  const updateWarehouse = async (w: { id: string; name: string; location: string | null }) => {
+    if (!isSupabaseConfigured || !supabase) return;
+    const { error } = await supabase
+      .from("warehouses")
+      .update({ name: w.name, location: w.location })
+      .eq("id", w.id);
+    if (error) toast.error(error.message);
+    else toast.success("Warehouse updated");
+  };
+  const deleteWarehouse = async (id: string) => {
+    if (!confirm("Delete this warehouse?")) return;
+    if (!isSupabaseConfigured || !supabase) return;
+    const { error } = await supabase.from("warehouses").delete().eq("id", id);
+    if (error) toast.error(error.message);
+    else {
+      setWarehouses((prev) => prev.filter((x) => x.id !== id));
+      setWarehouseOptions((prev) => prev.filter((x) => x.id !== id));
+      toast.success("Warehouse deleted");
+    }
+  };
+
+  const saveInventoryRow = async (row: { product_id: string; warehouse_id: string; stock: number }) => {
+    if (!isSupabaseConfigured || !supabase) return;
+    const { error } = await supabase.from("inventory").upsert(row);
+    if (error) toast.error(error.message);
+    else toast.success("Inventory saved");
+  };
+  const deleteInventoryRow = async (row: { product_id: string; warehouse_id: string }) => {
+    if (!confirm("Delete this inventory row?")) return;
+    if (!isSupabaseConfigured || !supabase) return;
+    const { error } = await supabase
+      .from("inventory")
+      .delete()
+      .eq("product_id", row.product_id)
+      .eq("warehouse_id", row.warehouse_id);
+    if (error) toast.error(error.message);
+    else {
+      setInventoryRows((prev) => prev.filter((r) => !(r.product_id === row.product_id && r.warehouse_id === row.warehouse_id)));
+      toast.success("Inventory deleted");
     }
   };
 
@@ -579,7 +636,7 @@ export default function Admin() {
             </div>
           </div>
           <div className="rounded-lg border border-border bg-background p-4">
-            <div className="text-sm text-muted-foreground">Orders</div>
+            <div className="text-sm text-muted-foreground">Orders (count)</div>
             <div className="mt-1 text-3xl font-extrabold">
               {analytics.count}
             </div>
@@ -866,6 +923,22 @@ export default function Admin() {
               />
             </div>
             <Button onClick={addWarehouse}>Add warehouse</Button>
+
+            {warehouses.length > 0 && (
+              <div className="grid gap-2 mt-4">
+                <h3 className="text-sm font-semibold">Manage warehouses</h3>
+                {warehouses.map((w) => (
+                  <div key={w.id} className="grid gap-2 sm:grid-cols-3 rounded-lg border border-border p-3">
+                    <input className="input" value={w.name} onChange={(e)=>setWarehouses(prev=>prev.map(x=>x.id===w.id?{...x,name:e.target.value}:x))} />
+                    <input className="input" value={w.location || ""} onChange={(e)=>setWarehouses(prev=>prev.map(x=>x.id===w.id?{...x,location:e.target.value}:x))} />
+                    <div className="flex items-center gap-2">
+                      <Button variant="outline" onClick={()=>updateWarehouse(w)}>Save</Button>
+                      <Button variant="destructive" onClick={()=>deleteWarehouse(w.id)}>Delete</Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="grid gap-4">
@@ -911,6 +984,21 @@ export default function Admin() {
             </div>
             <Button onClick={setStock}>Save inventory</Button>
             <p className="text-xs text-muted-foreground">Tip: If selects are empty, first add a product and a warehouse. These fields save stock for the selected (product, warehouse) pair.</p>
+
+            {inventoryRows.length > 0 && (
+              <div className="grid gap-2 mt-4">
+                <h3 className="text-sm font-semibold">Inventory list</h3>
+                {inventoryRows.map((r) => (
+                  <div key={`${r.product_id}-${r.warehouse_id}`} className="grid gap-2 sm:grid-cols-5 rounded-lg border border-border p-3 items-center">
+                    <div className="text-sm truncate">{productOptions.find(p=>p.id===r.product_id)?.title || r.product_id}</div>
+                    <div className="text-sm truncate">{warehouseOptions.find(w=>w.id===r.warehouse_id)?.name || r.warehouse_id}</div>
+                    <input className="input" type="number" value={r.stock} onChange={(e)=>setInventoryRows(prev=>prev.map(x=>x===r?{...x,stock:Number(e.target.value)}:x))} />
+                    <Button variant="outline" onClick={()=>saveInventoryRow(r)}>Save</Button>
+                    <Button variant="destructive" onClick={()=>deleteInventoryRow(r)}>Delete</Button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </>
       )}
