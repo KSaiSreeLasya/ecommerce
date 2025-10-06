@@ -179,12 +179,19 @@ export default function Admin() {
         .from("products")
         .select("id,title")
         .order("title");
-      setProductOptions((products || []).map((p: any) => ({ id: p.id, title: p.title })));
+      const prodOpts = (products || []).map((p: any) => ({ id: p.id, title: p.title }));
+      setProductOptions(prodOpts);
       const { data: warehouses } = await supabase
         .from("warehouses")
         .select("id,name")
         .order("name");
-      setWarehouseOptions((warehouses || []).map((w: any) => ({ id: w.id, name: w.name })));
+      const whOpts = (warehouses || []).map((w: any) => ({ id: w.id, name: w.name }));
+      setWarehouseOptions(whOpts);
+      setInventory((prev) => ({
+        ...prev,
+        product_id: prev.product_id || prodOpts[0]?.id || "",
+        warehouse_id: prev.warehouse_id || whOpts[0]?.id || "",
+      }));
     })();
   }, [isAdmin]);
 
