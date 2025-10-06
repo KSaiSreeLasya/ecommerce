@@ -107,8 +107,7 @@ export default function Admin() {
       if (requirePassword) {
         setExisting(readLocalProducts());
         setAnalyticsRows(readLocalAnalytics());
-        const ok = localStorage.getItem("admin_pass_ok") === "1";
-        setIsAdmin(ok);
+        setIsAdmin(false);
         return;
       }
 
@@ -167,7 +166,6 @@ export default function Admin() {
   const unlock = () => {
     if (!requirePassword) return;
     if (pass === ADMIN_PASSWORD) {
-      localStorage.setItem("admin_pass_ok", "1");
       setIsAdmin(true);
     } else {
       toast.error("Incorrect password");
@@ -228,11 +226,11 @@ export default function Admin() {
       </section>
     );
 
-  const lockAdmin = () => {
-    if (requirePassword) {
-      localStorage.removeItem("admin_pass_ok");
-      setIsAdmin(false);
-    }
+  const logoutAdmin = async () => {
+    try {
+      if (isSupabaseConfigured && supabase) await supabase.auth.signOut();
+    } catch {}
+    setIsAdmin(false);
   };
 
   const uploadImagesIfNeeded = async (): Promise<string[]> => {
@@ -481,8 +479,8 @@ export default function Admin() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Admin Dashboard</h1>
         {requirePassword && (
-          <Button variant="outline" onClick={lockAdmin}>
-            Lock admin
+          <Button variant="outline" onClick={logoutAdmin}>
+            Logout
           </Button>
         )}
       </div>
