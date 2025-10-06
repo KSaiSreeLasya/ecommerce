@@ -30,7 +30,9 @@ export function calculateOfferPricing(
   return { finalPrice, discountAmount };
 }
 
-export function getCartItemUnitPrice(item: CartItem): number {
+export function getCartItemUnitPrice(
+  item: { price: number; offer?: OfferSource } & Partial<{ quantity: number }>,
+): number {
   const { finalPrice } = calculateOfferPricing(item.price, item.offer);
   return finalPrice;
 }
