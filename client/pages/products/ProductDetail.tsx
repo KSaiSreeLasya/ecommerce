@@ -47,11 +47,6 @@ type FAQItem = { question: string; answer: string };
 
 type OfferRecord = any;
 
-type OfferFetchResult = {
-  offers: OfferDetail[];
-  rawOffers: OfferRecord[];
-};
-
 const DEFAULT_OFFERS: OfferDetail[] = [
   {
     id: "emi-12",
