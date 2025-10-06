@@ -14,6 +14,11 @@ import Admin from "./pages/admin/Admin";
 import Auth from "./pages/auth/Auth";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
+import Careers from "./pages/Careers";
+import ReturnPolicy from "./pages/ReturnPolicy";
+import RefundPolicy from "./pages/RefundPolicy";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import Disclaimer from "./pages/Disclaimer";
 import Layout from "@/components/layout/Layout";
 import ProductDetail from "./pages/products/ProductDetail";
 
@@ -35,6 +40,11 @@ const App = () => (
             <Route path="auth" element={<Auth />} />
             <Route path="about" element={<About />} />
             <Route path="contact" element={<Contact />} />
+            <Route path="careers" element={<Careers />} />
+            <Route path="return-policy" element={<ReturnPolicy />} />
+            <Route path="refund-policy" element={<RefundPolicy />} />
+            <Route path="privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="disclaimer" element={<Disclaimer />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Route>
