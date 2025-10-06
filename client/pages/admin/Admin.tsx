@@ -228,6 +228,13 @@ export default function Admin() {
       </section>
     );
 
+  const lockAdmin = () => {
+    if (requirePassword) {
+      localStorage.removeItem("admin_pass_ok");
+      setIsAdmin(false);
+    }
+  };
+
   const uploadImagesIfNeeded = async (): Promise<string[]> => {
     if (!imageFiles.length)
       return product.images
