@@ -269,17 +269,6 @@ export default function ProductDetail() {
             </div>
           )}
         </div>
-        <div className="mt-6 grid gap-3 max-w-prose text-sm text-muted-foreground">
-          <p>
-            High‑efficiency mono PERC module built for Indian conditions. Robust
-            frame, excellent low‑light performance and easy installation.
-          </p>
-          <ul className="list-disc pl-5">
-            <li>Premium quality cells</li>
-            <li>Weather‑sealed junction box</li>
-            <li>25‑year performance warranty</li>
-          </ul>
-        </div>
         <div className="mt-6 flex gap-3">
           <Button
             onClick={() =>
@@ -307,6 +296,63 @@ export default function ProductDetail() {
           >
             Buy now
           </Button>
+        </div>
+        <div className="mt-6 grid gap-4 max-w-prose text-sm text-muted-foreground">
+          <p>{descriptionText}</p>
+        </div>
+        <div className="mt-4 flex flex-wrap gap-3 text-sm">
+          <div className="inline-flex items-center gap-2 rounded-md border border-primary/30 bg-primary/10 px-3 py-2 text-primary">
+            <ShieldCheck className="h-4 w-4" />
+            <span className="text-foreground">{warrantyText}</span>
+          </div>
+          <div className="inline-flex items-center gap-2 rounded-md border border-border bg-muted/40 px-3 py-2">
+            <Truck className="h-4 w-4 text-muted-foreground" />
+            <span>{deliveryText}</span>
+          </div>
+        </div>
+        {offerList.length > 0 && (
+          <div className="mt-6 rounded-lg border border-primary/40 bg-primary/5 p-4">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-primary">
+              Offers &amp; deals
+            </h2>
+            <ul className="mt-3 space-y-2 text-sm text-foreground">
+              {offerList.map((offer, index) => (
+                <li key={index} className="flex items-start gap-2">
+                  <Sparkles className="mt-0.5 h-4 w-4 text-primary" />
+                  <span>{offer}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+        {highlightList.length > 0 && (
+          <div className="mt-6">
+            <h2 className="text-base font-semibold">Product highlights</h2>
+            <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
+              {highlightList.map((item, index) => (
+                <li key={index} className="flex items-start gap-2">
+                  <CheckCircle2 className="mt-0.5 h-4 w-4 text-primary" />
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+        <div className="mt-8">
+          <h2 className="text-base font-semibold">Specifications</h2>
+          <dl className="mt-4 grid gap-4 text-sm sm:grid-cols-2">
+            {specs.map((row) => (
+              <div
+                key={row.label}
+                className="rounded border border-border/70 bg-muted/20 p-3"
+              >
+                <dt className="text-xs uppercase tracking-wide text-muted-foreground">
+                  {row.label}
+                </dt>
+                <dd className="mt-1 font-medium text-foreground">{row.value}</dd>
+              </div>
+            ))}
+          </dl>
         </div>
       </div>
     </section>
