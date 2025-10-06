@@ -90,8 +90,8 @@ export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
   const navState = (location.state as { product?: Product } | null) || null;
-  const [product, setProduct] = useState<Product | null>(
-    navState?.product ?? null,
+  const [product, setProduct] = useState<ProductDetailData | null>(
+    navState?.product ? toDetailProduct(navState.product) : null,
   );
   const [images, setImages] = useState<string[]>(
     navState?.product ? [navState.product.image] : [],
