@@ -1,5 +1,3 @@
-import type { CartItem } from "@/state/cart";
-
 export type DiscountType = "percentage" | "flat";
 
 export type OfferDetail = {
