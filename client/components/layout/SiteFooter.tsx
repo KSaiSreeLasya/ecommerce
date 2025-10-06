@@ -31,16 +31,36 @@ export function SiteFooter() {
           <h4 className="font-semibold mb-3">Company</h4>
           <ul className="space-y-2 text-sm text-muted-foreground">
             <li>
-              <Link to="/about" className="hover:text-foreground underline-offset-2 hover:underline">About</Link>
+              <Link
+                to="/about"
+                className="hover:text-foreground underline-offset-2 hover:underline"
+              >
+                About
+              </Link>
             </li>
             <li>
-              <Link to="/careers" className="hover:text-foreground underline-offset-2 hover:underline">Careers</Link>
+              <Link
+                to="/careers"
+                className="hover:text-foreground underline-offset-2 hover:underline"
+              >
+                Careers
+              </Link>
             </li>
             <li>
-              <Link to="/contact" className="hover:text-foreground underline-offset-2 hover:underline">Contact</Link>
+              <Link
+                to="/contact"
+                className="hover:text-foreground underline-offset-2 hover:underline"
+              >
+                Contact
+              </Link>
             </li>
             <li>
-              <Link to="/admin" className="hover:text-foreground underline-offset-2 hover:underline">System</Link>
+              <Link
+                to="/admin"
+                className="hover:text-foreground underline-offset-2 hover:underline"
+              >
+                System
+              </Link>
             </li>
           </ul>
         </div>
@@ -48,16 +68,36 @@ export function SiteFooter() {
           <h4 className="font-semibold mb-3">Policies</h4>
           <ul className="space-y-2 text-sm text-muted-foreground">
             <li>
-              <Link to="/return-policy" className="hover:text-foreground underline-offset-2 hover:underline">Return Policy</Link>
+              <Link
+                to="/return-policy"
+                className="hover:text-foreground underline-offset-2 hover:underline"
+              >
+                Return Policy
+              </Link>
             </li>
             <li>
-              <Link to="/refund-policy" className="hover:text-foreground underline-offset-2 hover:underline">Refund Policy</Link>
+              <Link
+                to="/refund-policy"
+                className="hover:text-foreground underline-offset-2 hover:underline"
+              >
+                Refund Policy
+              </Link>
             </li>
             <li>
-              <Link to="/privacy-policy" className="hover:text-foreground underline-offset-2 hover:underline">Privacy Policy</Link>
+              <Link
+                to="/privacy-policy"
+                className="hover:text-foreground underline-offset-2 hover:underline"
+              >
+                Privacy Policy
+              </Link>
             </li>
             <li>
-              <Link to="/disclaimer" className="hover:text-foreground underline-offset-2 hover:underline">Disclaimer</Link>
+              <Link
+                to="/disclaimer"
+                className="hover:text-foreground underline-offset-2 hover:underline"
+              >
+                Disclaimer
+              </Link>
             </li>
           </ul>
         </div>

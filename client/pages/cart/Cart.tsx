@@ -126,13 +126,18 @@ export default function Cart() {
           .select("id,product_id,stock")
           .in("product_id", productIds);
         const qtyByProduct: Record<string, number> = {};
-        for (const r of rows) if (r.product_id)
-          qtyByProduct[r.product_id] = (qtyByProduct[r.product_id] || 0) + r.quantity;
+        for (const r of rows)
+          if (r.product_id)
+            qtyByProduct[r.product_id] =
+              (qtyByProduct[r.product_id] || 0) + r.quantity;
         for (const inv of inventoryRows || []) {
           const dec = qtyByProduct[inv.product_id] || 0;
           if (dec > 0) {
             const newStock = Math.max(0, (inv.stock || 0) - dec);
-            await supabase.from("inventory").update({ stock: newStock }).eq("id", inv.id);
+            await supabase
+              .from("inventory")
+              .update({ stock: newStock })
+              .eq("id", inv.id);
           }
         }
       }
@@ -206,12 +211,16 @@ export default function Cart() {
             ))}
           </div>
           <div className="rounded-lg border border-border p-4 h-fit sticky top-20">
-            <div className="text-sm text-muted-foreground">Subtotal ({items.length} item{items.length!==1?'s':''})</div>
+            <div className="text-sm text-muted-foreground">
+              Subtotal ({items.length} item{items.length !== 1 ? "s" : ""})
+            </div>
             <div className="mt-1 flex items-baseline justify-between">
               <span className="font-semibold">Order Total</span>
               <span className="text-2xl font-extrabold">{inr(total)}</span>
             </div>
-            <label className="mt-3 inline-flex items-center gap-2 text-sm"><input type="checkbox"/> This order contains a gift</label>
+            <label className="mt-3 inline-flex items-center gap-2 text-sm">
+              <input type="checkbox" /> This order contains a gift
+            </label>
             <div className="mt-4 grid gap-2">
               <input
                 type="email"

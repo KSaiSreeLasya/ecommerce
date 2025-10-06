@@ -218,7 +218,10 @@ export default function Admin() {
         .from("products")
         .select("id,title")
         .order("title");
-      const prodOpts = (products || []).map((p: any) => ({ id: p.id, title: p.title }));
+      const prodOpts = (products || []).map((p: any) => ({
+        id: p.id,
+        title: p.title,
+      }));
       setProductOptions(prodOpts);
 
       const { data: wh } = await supabase
@@ -456,15 +459,25 @@ export default function Admin() {
       .single();
     if (error) toast.error(error.message);
     else {
-      setWarehouseOptions((prev) => [{ id: data!.id, name: data!.name }, ...prev]);
-      setWarehouses((prev) => [{ id: data!.id, name: data!.name, location: data!.location || null }, ...prev]);
+      setWarehouseOptions((prev) => [
+        { id: data!.id, name: data!.name },
+        ...prev,
+      ]);
+      setWarehouses((prev) => [
+        { id: data!.id, name: data!.name, location: data!.location || null },
+        ...prev,
+      ]);
       setInventory((prev) => ({ ...prev, warehouse_id: data!.id }));
       setWarehouse({ name: "", location: "" });
       toast.success("Warehouse added");
     }
   };
 
-  const updateWarehouse = async (w: { id: string; name: string; location: string | null }) => {
+  const updateWarehouse = async (w: {
+    id: string;
+    name: string;
+    location: string | null;
+  }) => {
     if (!isSupabaseConfigured || !supabase) return;
     const { error } = await supabase
       .from("warehouses")
@@ -485,13 +498,20 @@ export default function Admin() {
     }
   };
 
-  const saveInventoryRow = async (row: { product_id: string; warehouse_id: string; stock: number }) => {
+  const saveInventoryRow = async (row: {
+    product_id: string;
+    warehouse_id: string;
+    stock: number;
+  }) => {
     if (!isSupabaseConfigured || !supabase) return;
     const { error } = await supabase.from("inventory").upsert(row);
     if (error) toast.error(error.message);
     else toast.success("Inventory saved");
   };
-  const deleteInventoryRow = async (row: { product_id: string; warehouse_id: string }) => {
+  const deleteInventoryRow = async (row: {
+    product_id: string;
+    warehouse_id: string;
+  }) => {
     if (!confirm("Delete this inventory row?")) return;
     if (!isSupabaseConfigured || !supabase) return;
     const { error } = await supabase
@@ -501,7 +521,15 @@ export default function Admin() {
       .eq("warehouse_id", row.warehouse_id);
     if (error) toast.error(error.message);
     else {
-      setInventoryRows((prev) => prev.filter((r) => !(r.product_id === row.product_id && r.warehouse_id === row.warehouse_id)));
+      setInventoryRows((prev) =>
+        prev.filter(
+          (r) =>
+            !(
+              r.product_id === row.product_id &&
+              r.warehouse_id === row.warehouse_id
+            ),
+        ),
+      );
       toast.success("Inventory deleted");
     }
   };
@@ -928,12 +956,47 @@ export default function Admin() {
               <div className="grid gap-2 mt-4">
                 <h3 className="text-sm font-semibold">Manage warehouses</h3>
                 {warehouses.map((w) => (
-                  <div key={w.id} className="grid gap-2 sm:grid-cols-3 rounded-lg border border-border p-3">
-                    <input className="input" value={w.name} onChange={(e)=>setWarehouses(prev=>prev.map(x=>x.id===w.id?{...x,name:e.target.value}:x))} />
-                    <input className="input" value={w.location || ""} onChange={(e)=>setWarehouses(prev=>prev.map(x=>x.id===w.id?{...x,location:e.target.value}:x))} />
+                  <div
+                    key={w.id}
+                    className="grid gap-2 sm:grid-cols-3 rounded-lg border border-border p-3"
+                  >
+                    <input
+                      className="input"
+                      value={w.name}
+                      onChange={(e) =>
+                        setWarehouses((prev) =>
+                          prev.map((x) =>
+                            x.id === w.id ? { ...x, name: e.target.value } : x,
+                          ),
+                        )
+                      }
+                    />
+                    <input
+                      className="input"
+                      value={w.location || ""}
+                      onChange={(e) =>
+                        setWarehouses((prev) =>
+                          prev.map((x) =>
+                            x.id === w.id
+                              ? { ...x, location: e.target.value }
+                              : x,
+                          ),
+                        )
+                      }
+                    />
                     <div className="flex items-center gap-2">
-                      <Button variant="outline" onClick={()=>updateWarehouse(w)}>Save</Button>
-                      <Button variant="destructive" onClick={()=>deleteWarehouse(w.id)}>Delete</Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => updateWarehouse(w)}
+                      >
+                        Save
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        onClick={() => deleteWarehouse(w.id)}
+                      >
+                        Delete
+                      </Button>
                     </div>
                   </div>
                 ))}
@@ -983,18 +1046,54 @@ export default function Admin() {
               />
             </div>
             <Button onClick={setStock}>Save inventory</Button>
-            <p className="text-xs text-muted-foreground">Tip: If selects are empty, first add a product and a warehouse. These fields save stock for the selected (product, warehouse) pair.</p>
+            <p className="text-xs text-muted-foreground">
+              Tip: If selects are empty, first add a product and a warehouse.
+              These fields save stock for the selected (product, warehouse)
+              pair.
+            </p>
 
             {inventoryRows.length > 0 && (
               <div className="grid gap-2 mt-4">
                 <h3 className="text-sm font-semibold">Inventory list</h3>
                 {inventoryRows.map((r) => (
-                  <div key={`${r.product_id}-${r.warehouse_id}`} className="grid gap-2 sm:grid-cols-5 rounded-lg border border-border p-3 items-center">
-                    <div className="text-sm truncate">{productOptions.find(p=>p.id===r.product_id)?.title || r.product_id}</div>
-                    <div className="text-sm truncate">{warehouseOptions.find(w=>w.id===r.warehouse_id)?.name || r.warehouse_id}</div>
-                    <input className="input" type="number" value={r.stock} onChange={(e)=>setInventoryRows(prev=>prev.map(x=>x===r?{...x,stock:Number(e.target.value)}:x))} />
-                    <Button variant="outline" onClick={()=>saveInventoryRow(r)}>Save</Button>
-                    <Button variant="destructive" onClick={()=>deleteInventoryRow(r)}>Delete</Button>
+                  <div
+                    key={`${r.product_id}-${r.warehouse_id}`}
+                    className="grid gap-2 sm:grid-cols-5 rounded-lg border border-border p-3 items-center"
+                  >
+                    <div className="text-sm truncate">
+                      {productOptions.find((p) => p.id === r.product_id)
+                        ?.title || r.product_id}
+                    </div>
+                    <div className="text-sm truncate">
+                      {warehouseOptions.find((w) => w.id === r.warehouse_id)
+                        ?.name || r.warehouse_id}
+                    </div>
+                    <input
+                      className="input"
+                      type="number"
+                      value={r.stock}
+                      onChange={(e) =>
+                        setInventoryRows((prev) =>
+                          prev.map((x) =>
+                            x === r
+                              ? { ...x, stock: Number(e.target.value) }
+                              : x,
+                          ),
+                        )
+                      }
+                    />
+                    <Button
+                      variant="outline"
+                      onClick={() => saveInventoryRow(r)}
+                    >
+                      Save
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      onClick={() => deleteInventoryRow(r)}
+                    >
+                      Delete
+                    </Button>
                   </div>
                 ))}
               </div>
