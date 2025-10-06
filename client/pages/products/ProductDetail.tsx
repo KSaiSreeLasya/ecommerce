@@ -70,7 +70,8 @@ const DEFAULT_OFFERS: OfferDetail[] = [
   {
     id: "survey-bundle",
     title: "Free site survey & installation support",
-    description: "Complimentary site survey worth ₹4,999 with every module bundle.",
+    description:
+      "Complimentary site survey worth ₹4,999 with every module bundle.",
     discountType: "flat",
     discountValue: 0,
     terms: "Survey will be scheduled within 48 hours of purchase.",
@@ -136,7 +137,10 @@ function parseDiscountType(value: unknown): DiscountType {
   return "flat";
 }
 
-function normaliseOffer(record: OfferRecord, index: number): OfferDetail | null {
+function normaliseOffer(
+  record: OfferRecord,
+  index: number,
+): OfferDetail | null {
   if (!record) return null;
   if (typeof record === "string") {
     return {
@@ -272,7 +276,9 @@ function InfoTabs({
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="technical">Technical specs</TabsTrigger>
-          <TabsTrigger value="installation">Installation & Warranty</TabsTrigger>
+          <TabsTrigger value="installation">
+            Installation & Warranty
+          </TabsTrigger>
           <TabsTrigger value="faq">FAQ</TabsTrigger>
         </TabsList>
         <TabsContent
@@ -434,7 +440,10 @@ function OfferList({
                 </div>
                 <div className="flex items-center gap-2 self-start sm:self-center">
                   {isSelected ? (
-                    <Badge variant="outline" className="border-primary text-primary">
+                    <Badge
+                      variant="outline"
+                      className="border-primary text-primary"
+                    >
                       Applied
                     </Badge>
                   ) : null}
@@ -499,7 +508,10 @@ function ProductComparison({
         </div>
         <div className="divide-y divide-border text-sm">
           {rows.map((row) => (
-            <div key={row.label} className="grid grid-cols-[1fr_repeat(2,minmax(0,1fr))]">
+            <div
+              key={row.label}
+              className="grid grid-cols-[1fr_repeat(2,minmax(0,1fr))]"
+            >
               <div className="bg-muted/40 px-4 py-3 font-medium text-muted-foreground">
                 {row.label}
               </div>
@@ -548,7 +560,10 @@ function SuggestedProducts({ products }: { products: Product[] }) {
               </div>
             </div>
             <Button asChild variant="outline">
-              <Link to={`/products/${product.id}`} className="inline-flex items-center gap-1">
+              <Link
+                to={`/products/${product.id}`}
+                className="inline-flex items-center gap-1"
+              >
                 Choose option <ArrowRight className="h-4 w-4" />
               </Link>
             </Button>
@@ -563,8 +578,12 @@ export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
   const navState = (location.state as { product?: Product } | null) || null;
-  const initialProduct = navState?.product ? toDetailProduct(navState.product) : null;
-  const [product, setProduct] = useState<ProductDetailData | null>(initialProduct);
+  const initialProduct = navState?.product
+    ? toDetailProduct(navState.product)
+    : null;
+  const [product, setProduct] = useState<ProductDetailData | null>(
+    initialProduct,
+  );
   const [gallery, setGallery] = useState<string[]>(
     initialProduct ? [initialProduct.image] : [],
   );
@@ -633,14 +652,13 @@ export default function ProductDetail() {
 
       const jsonOffers = Array.isArray(productRow.offers)
         ? productRow.offers
-            .map((entry: unknown, index: number) => normaliseOffer(entry, index))
+            .map((entry: unknown, index: number) =>
+              normaliseOffer(entry, index),
+            )
             .filter((offer): offer is OfferDetail => Boolean(offer))
         : [];
 
-      const mergedOffers = dedupeOffers([
-        ...relationalOffers,
-        ...jsonOffers,
-      ]);
+      const mergedOffers = dedupeOffers([...relationalOffers, ...jsonOffers]);
 
       const highlights = normaliseStringArray(productRow.highlights);
       const badges = normaliseStringArray(productRow.badges);
@@ -656,10 +674,11 @@ export default function ProductDetail() {
         mrp:
           productRow.mrp !== null && productRow.mrp !== undefined
             ? Number(productRow.mrp)
-            : initialProduct?.mrp ?? null,
+            : (initialProduct?.mrp ?? null),
         image: productGallery[0] ?? FALLBACK_PRODUCT_IMAGE,
-        badges: badges.length ? badges : initialProduct?.badges ?? [],
-        description: productRow.description ?? initialProduct?.description ?? null,
+        badges: badges.length ? badges : (initialProduct?.badges ?? []),
+        description:
+          productRow.description ?? initialProduct?.description ?? null,
         brand: productRow.brand ?? initialProduct?.brand ?? null,
         wattage: productRow.wattage ?? initialProduct?.wattage ?? null,
         panel_type:
@@ -707,14 +726,16 @@ export default function ProductDetail() {
       setSelectedOfferId(null);
       return;
     }
-    if (!selectedOfferId || !product.offers.some((o) => o.id === selectedOfferId)) {
+    if (
+      !selectedOfferId ||
+      !product.offers.some((o) => o.id === selectedOfferId)
+    ) {
       setSelectedOfferId(product.offers[0].id);
     }
   }, [product?.offers, selectedOfferId]);
 
   const selectedOffer = useMemo(
-    () =>
-      product?.offers.find((offer) => offer.id === selectedOfferId) ?? null,
+    () => product?.offers.find((offer) => offer.id === selectedOfferId) ?? null,
     [product?.offers, selectedOfferId],
   );
 
@@ -806,7 +827,11 @@ export default function ProductDetail() {
           <div className="space-y-3">
             <div className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-wide text-primary">
               <span>Waaree</span>
-              {product.sku && <span className="text-muted-foreground">SKU: {product.sku}</span>}
+              {product.sku && (
+                <span className="text-muted-foreground">
+                  SKU: {product.sku}
+                </span>
+              )}
             </div>
             <h1 className="text-3xl font-bold text-foreground md:text-4xl">
               {product.title}
@@ -844,7 +869,8 @@ export default function ProductDetail() {
             </div>
             {selectedOffer && offerPricing.discountAmount > 0 ? (
               <p className="text-sm text-muted-foreground">
-                Offer applied: {selectedOffer.title} — you save {inr(offerPricing.discountAmount)}
+                Offer applied: {selectedOffer.title} — you save{" "}
+                {inr(offerPricing.discountAmount)}
               </p>
             ) : null}
           </div>

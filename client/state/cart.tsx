@@ -77,10 +77,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
                   quantity: p.quantity + qty,
                   price: Number.isFinite(item.price) ? item.price : p.price,
                   image: item.image ?? p.image,
-                  mrp:
-                    item.mrp !== undefined
-                      ? item.mrp
-                      : p.mrp ?? null,
+                  mrp: item.mrp !== undefined ? item.mrp : (p.mrp ?? null),
                   offer: item.offer ?? p.offer ?? null,
                 }
               : p,

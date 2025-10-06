@@ -1,12 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import {
-  Gift,
-  Minus,
-  Package,
-  Plus,
-  Truck,
-  X,
-} from "lucide-react";
+import { Gift, Minus, Package, Plus, Truck, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -58,7 +51,9 @@ function QuantityControl({
         type="number"
         min={1}
         value={value}
-        onChange={(event) => onChange(Math.max(1, Number(event.target.value) || 1))}
+        onChange={(event) =>
+          onChange(Math.max(1, Number(event.target.value) || 1))
+        }
         className="h-9 w-12 border-x border-border bg-transparent text-center text-sm text-foreground focus:outline-none"
       />
       <button
@@ -83,7 +78,8 @@ function CartRow({
   onRemove: (id: string) => void;
 }) {
   const offerPricing = calculateOfferPricing(item.price, item.offer);
-  const mrpSavings = item.mrp && item.mrp > item.price ? item.mrp - item.price : 0;
+  const mrpSavings =
+    item.mrp && item.mrp > item.price ? item.mrp - item.price : 0;
   const lineTotal = offerPricing.finalPrice * item.quantity;
 
   return (
@@ -125,7 +121,10 @@ function CartRow({
       </td>
       <td className="px-4 py-4 align-top">
         <div className="flex items-center gap-3">
-          <QuantityControl value={item.quantity} onChange={(qty) => onUpdate(item.id, qty)} />
+          <QuantityControl
+            value={item.quantity}
+            onChange={(qty) => onUpdate(item.id, qty)}
+          />
           <Button
             variant="ghost"
             size="icon"
@@ -155,7 +154,9 @@ function SummaryRow({
   return (
     <div className="flex items-center justify-between text-sm">
       <span className="text-muted-foreground">{label}</span>
-      <span className={accent ? "font-semibold text-foreground" : "text-foreground"}>
+      <span
+        className={accent ? "font-semibold text-foreground" : "text-foreground"}
+      >
         {value}
       </span>
     </div>
@@ -261,7 +262,10 @@ export default function Cart() {
       };
     });
     const subtotal = lineItems.reduce((acc, row) => acc + row.lineBase, 0);
-    const offerSavings = lineItems.reduce((acc, row) => acc + row.offerSavings, 0);
+    const offerSavings = lineItems.reduce(
+      (acc, row) => acc + row.offerSavings,
+      0,
+    );
     const mrpSavings = lineItems.reduce((acc, row) => acc + row.mrpSavings, 0);
     const finalTotal = lineItems.reduce((acc, row) => acc + row.finalLine, 0);
     const shipping = finalTotal === 0 || finalTotal >= 75000 ? 0 : 999;
@@ -324,8 +328,16 @@ export default function Cart() {
       localStorage.setItem("demo_orders", JSON.stringify(arr));
       persistLocalAnalytics(orderTotal);
       clear();
-      setSuccess({ open: true, orderId: order.id, items: items.length, total: orderTotal });
-      toast.success(message || "Order placed (local demo). Connect Supabase for persistence.");
+      setSuccess({
+        open: true,
+        orderId: order.id,
+        items: items.length,
+        total: orderTotal,
+      });
+      toast.success(
+        message ||
+          "Order placed (local demo). Connect Supabase for persistence.",
+      );
     };
 
     if (!isSupabaseConfigured || !supabase) {
@@ -445,7 +457,12 @@ export default function Cart() {
     }
 
     clear();
-    setSuccess({ open: true, orderId: order.id, items: items.length, total: orderTotal });
+    setSuccess({
+      open: true,
+      orderId: order.id,
+      items: items.length,
+      total: orderTotal,
+    });
     toast.success("Order placed!");
   };
 
@@ -468,11 +485,16 @@ export default function Cart() {
             Your cart ({items.length} item{items.length === 1 ? "" : "s"})
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Review your selections, apply offers, and proceed to secure checkout.
+            Review your selections, apply offers, and proceed to secure
+            checkout.
           </p>
         </div>
         {items.length > 0 && (
-          <Button variant="ghost" onClick={clear} className="text-sm text-muted-foreground">
+          <Button
+            variant="ghost"
+            onClick={clear}
+            className="text-sm text-muted-foreground"
+          >
             Clear cart
           </Button>
         )}
@@ -480,7 +502,11 @@ export default function Cart() {
 
       {items.length === 0 ? (
         <div className="mt-10 rounded-xl border border-dashed border-border p-10 text-center text-muted-foreground">
-          Your cart is empty. Browse our <a href="/products" className="text-primary underline">product collection</a> to add solar solutions.
+          Your cart is empty. Browse our{" "}
+          <a href="/products" className="text-primary underline">
+            product collection
+          </a>{" "}
+          to add solar solutions.
         </div>
       ) : (
         <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1.8fr)_minmax(0,1fr)]">
@@ -497,13 +523,21 @@ export default function Cart() {
                 </thead>
                 <tbody>
                   {items.map((item) => (
-                    <CartRow key={item.id} item={item} onUpdate={update} onRemove={remove} />
+                    <CartRow
+                      key={item.id}
+                      item={item}
+                      onUpdate={update}
+                      onRemove={remove}
+                    />
                   ))}
                 </tbody>
               </table>
               <div className="grid gap-4 p-4 lg:hidden">
                 {items.map((item) => {
-                  const offerPricing = calculateOfferPricing(item.price, item.offer);
+                  const offerPricing = calculateOfferPricing(
+                    item.price,
+                    item.offer,
+                  );
                   return (
                     <div
                       key={item.id}
@@ -522,14 +556,20 @@ export default function Cart() {
                             {item.title}
                           </div>
                           {item.offer ? (
-                            <Badge variant="outline" className="border-primary text-primary">
+                            <Badge
+                              variant="outline"
+                              className="border-primary text-primary"
+                            >
                               {item.offer.title}
                             </Badge>
                           ) : null}
                           <div className="text-xs text-muted-foreground">
                             Base {inr(item.price)}
                             {offerPricing.discountAmount > 0 && (
-                              <span> • Save {inr(offerPricing.discountAmount)}</span>
+                              <span>
+                                {" "}
+                                • Save {inr(offerPricing.discountAmount)}
+                              </span>
                             )}
                           </div>
                         </div>
@@ -544,11 +584,16 @@ export default function Cart() {
                       </div>
                       <div className="flex items-center justify-between text-sm text-muted-foreground">
                         <span>Quantity</span>
-                        <QuantityControl value={item.quantity} onChange={(qty) => update(item.id, qty)} />
+                        <QuantityControl
+                          value={item.quantity}
+                          onChange={(qty) => update(item.id, qty)}
+                        />
                       </div>
                       <div className="flex items-center justify-between text-sm font-semibold text-foreground">
                         <span>Total</span>
-                        <span>{inr(offerPricing.finalPrice * item.quantity)}</span>
+                        <span>
+                          {inr(offerPricing.finalPrice * item.quantity)}
+                        </span>
                       </div>
                     </div>
                   );
@@ -573,18 +618,36 @@ export default function Cart() {
               Order summary
             </h2>
             <div className="mt-4 space-y-3">
-              <SummaryRow label={`Subtotal (${items.length} item${items.length === 1 ? "" : "s"})`} value={inr(summary.subtotal)} />
+              <SummaryRow
+                label={`Subtotal (${items.length} item${items.length === 1 ? "" : "s"})`}
+                value={inr(summary.subtotal)}
+              />
               {summary.offerSavings > 0 && (
-                <SummaryRow label="Offer savings" value={`- ${inr(summary.offerSavings)}`} />
+                <SummaryRow
+                  label="Offer savings"
+                  value={`- ${inr(summary.offerSavings)}`}
+                />
               )}
               {summary.mrpSavings > 0 && (
-                <SummaryRow label="Bundle savings" value={`- ${inr(summary.mrpSavings)}`} />
+                <SummaryRow
+                  label="Bundle savings"
+                  value={`- ${inr(summary.mrpSavings)}`}
+                />
               )}
               {summary.couponSavings > 0 && (
-                <SummaryRow label="Coupon savings" value={`- ${inr(summary.couponSavings)}`} />
+                <SummaryRow
+                  label="Coupon savings"
+                  value={`- ${inr(summary.couponSavings)}`}
+                />
               )}
-              <SummaryRow label="Shipping" value={summary.shipping === 0 ? "Free" : inr(summary.shipping)} />
-              <SummaryRow label="Tax included" value={inr(summary.taxIncluded)} />
+              <SummaryRow
+                label="Shipping"
+                value={summary.shipping === 0 ? "Free" : inr(summary.shipping)}
+              />
+              <SummaryRow
+                label="Tax included"
+                value={inr(summary.taxIncluded)}
+              />
             </div>
             <div className="mt-4 space-y-2">
               <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -626,7 +689,8 @@ export default function Cart() {
               </Button>
               <p className="text-xs text-muted-foreground">
                 <Truck className="mr-1 inline h-4 w-4 text-primary" />
-                Delivery timelines vary by region. Estimate shipping during checkout.
+                Delivery timelines vary by region. Estimate shipping during
+                checkout.
               </p>
             </div>
             <div className="mt-6 space-y-3 rounded-lg border border-border bg-background p-4 text-sm text-muted-foreground">
@@ -636,7 +700,8 @@ export default function Cart() {
               </div>
               <div className="flex items-center gap-2">
                 <Package className="h-4 w-4 text-primary" />
-                Need a custom solar kit quote? Reach out to ecommerce@waaree.com.
+                Need a custom solar kit quote? Reach out to
+                ecommerce@waaree.com.
               </div>
             </div>
           </aside>
@@ -651,7 +716,8 @@ export default function Cart() {
           <DialogHeader>
             <DialogTitle>Order placed successfully</DialogTitle>
             <DialogDescription>
-              Thank you! Your order ID is {success.orderId}. A confirmation has been sent to {email || "your email"}.
+              Thank you! Your order ID is {success.orderId}. A confirmation has
+              been sent to {email || "your email"}.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-2 text-sm">
@@ -665,7 +731,9 @@ export default function Cart() {
             </div>
           </div>
           <DialogFooter>
-            <Button onClick={() => setSuccess({ open: false })}>Continue shopping</Button>
+            <Button onClick={() => setSuccess({ open: false })}>
+              Continue shopping
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
