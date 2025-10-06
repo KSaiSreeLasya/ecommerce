@@ -107,7 +107,7 @@ export default function ProductDetail() {
         const { data } = await supabase
           .from("products")
           .select(
-            "id,title,price,mrp,images,badges,description,brand,wattage,panel_type",
+            "id,title,price,mrp,images,badges,description,brand,wattage,panel_type,offers,highlights,warranty,delivery_time",
           )
           .eq("id", id)
           .maybeSingle();
