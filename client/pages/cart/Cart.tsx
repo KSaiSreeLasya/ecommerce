@@ -1,11 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import {
-  ArrowRight,
   Gift,
   Minus,
   Package,
   Plus,
-  Tag,
   Truck,
   X,
 } from "lucide-react";
