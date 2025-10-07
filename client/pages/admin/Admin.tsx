@@ -242,7 +242,11 @@ export default function Admin() {
         delivery_time: p.delivery_time ?? null,
         warranty: p.warranty ?? null,
         highlights: Array.isArray(p.highlights) ? p.highlights : [],
-        offers: Array.isArray(p.offers) ? p.offers : [],
+        offers: Array.isArray(p.offers)
+          ? p.offers.map((offer: any, index: number) =>
+              ensureOfferShape(offer, index),
+            )
+          : [],
         active: Boolean(p.active ?? true),
       }));
       setExisting(mapped);
@@ -286,7 +290,11 @@ export default function Admin() {
         delivery_time: p.delivery_time ?? null,
         warranty: p.warranty ?? null,
         highlights: Array.isArray(p.highlights) ? p.highlights : [],
-        offers: Array.isArray(p.offers) ? p.offers : [],
+        offers: Array.isArray(p.offers)
+          ? p.offers.map((offer: any, index: number) =>
+              ensureOfferShape(offer, index),
+            )
+          : [],
         active: Boolean(p.active ?? true),
       }));
       setExisting(mapped);
