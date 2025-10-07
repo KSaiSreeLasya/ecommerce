@@ -1039,7 +1039,9 @@ export default function Admin() {
           />
         </div>
         <p className="text-xs text-muted-foreground">
-          Offers accept a JSON array of objects with keys like title, discountType (flat/percentage), discountValue, couponCode, badge, terms. Leave blank to reuse defaults.
+          Offers accept a JSON array of objects with keys like title,
+          discountType (flat/percentage), discountValue, couponCode, badge,
+          terms. Leave blank to reuse defaults.
         </p>
         <Button onClick={addProduct}>Add product</Button>
       </div>
@@ -1260,9 +1262,7 @@ function ProductRow({
   onDelete: (id: string) => void;
 }) {
   const [local, setLocal] = useState<AdminProduct>(p);
-  const [badgesText, setBadgesText] = useState(
-    (p.badges || []).join(", "),
-  );
+  const [badgesText, setBadgesText] = useState((p.badges || []).join(", "));
   const [highlightsText, setHighlightsText] = useState(
     (p.highlights || []).join("\n"),
   );
@@ -1289,7 +1289,9 @@ function ProductRow({
           type="number"
           placeholder="Price"
           value={local.price}
-          onChange={(e) => setLocal({ ...local, price: Number(e.target.value) })}
+          onChange={(e) =>
+            setLocal({ ...local, price: Number(e.target.value) })
+          }
         />
         <input
           className="input"
@@ -1304,7 +1306,9 @@ function ProductRow({
           className="input"
           placeholder="Brand"
           value={local.brand ?? ""}
-          onChange={(e) => setLocal({ ...local, brand: e.target.value || null })}
+          onChange={(e) =>
+            setLocal({ ...local, brand: e.target.value || null })
+          }
         />
         <input
           className="input"
