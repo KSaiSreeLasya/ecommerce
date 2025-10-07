@@ -79,6 +79,7 @@ export function ProductCard({ product }: { product: Product }) {
                 title: product.title,
                 price: product.price,
                 image: product.image,
+                mrp: product.mrp ?? null,
               })
             }
           >
@@ -93,6 +94,7 @@ export function ProductCard({ product }: { product: Product }) {
                 title: product.title,
                 price: product.price,
                 image: product.image,
+                mrp: product.mrp ?? null,
               });
               navigate("/cart");
             }}

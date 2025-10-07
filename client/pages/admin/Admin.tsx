@@ -3,6 +3,9 @@ import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "react-router-dom";
 import { toast } from "sonner";
+import type { OfferDetail } from "@/lib/offers";
+
+type AdminOffer = OfferDetail;
 
 export type AdminProduct = {
   id: string;
@@ -17,11 +20,78 @@ export type AdminProduct = {
   images: string[];
   badges: string[];
   description?: string | null;
+  availability?: string | null;
+  delivery_time?: string | null;
+  warranty?: string | null;
+  highlights?: string[];
+  offers?: AdminOffer[];
   active: boolean;
 };
 
 const ADMIN_PASSWORD =
   (import.meta.env.VITE_ADMIN_PASSWORD as string | undefined) || undefined;
+
+function normaliseTextList(value: string): string[] {
+  return value
+    .split(/[\n,]+/)
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+}
+
+function generateOfferId(prefix: string, index: number) {
+  if (typeof crypto !== "undefined" && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  return `${prefix}-${Date.now()}-${index}`;
+}
+
+function ensureOfferShape(value: any, index: number): AdminOffer {
+  const discountTypeRaw = value?.discountType ?? value?.discount_type;
+  const discountType =
+    discountTypeRaw === "percentage" || discountTypeRaw === "percent"
+      ? "percentage"
+      : "flat";
+  const discountValueRaw =
+    value?.discountValue ?? value?.discount_value ?? value?.value ?? 0;
+  const discountValue = Number.isFinite(Number(discountValueRaw))
+    ? Number(discountValueRaw)
+    : 0;
+  return {
+    id: value?.id ?? generateOfferId("offer", index),
+    title: value?.title ?? value?.name ?? `Offer ${index + 1}`,
+    description: value?.description ?? value?.details ?? null,
+    couponCode: value?.couponCode ?? value?.coupon_code ?? null,
+    terms: value?.terms ?? value?.conditions ?? null,
+    badge: value?.badge ?? null,
+    discountType,
+    discountValue,
+  };
+}
+
+function parseOffersInput(input: string): AdminOffer[] {
+  const trimmed = input.trim();
+  if (!trimmed) return [];
+  try {
+    const parsed = JSON.parse(trimmed);
+    if (Array.isArray(parsed)) {
+      return parsed.map((item, index) => ensureOfferShape(item, index));
+    }
+  } catch {
+    // fall back to simple list parsing
+  }
+  return normaliseTextList(input).map((title, index) =>
+    ensureOfferShape({ title, discountType: "flat", discountValue: 0 }, index),
+  );
+}
+
+function formatOffersInput(offers?: AdminOffer[]): string {
+  if (!offers || offers.length === 0) return "";
+  try {
+    return JSON.stringify(offers, null, 2);
+  } catch {
+    return offers.map((offer) => offer.title).join("\n");
+  }
+}
 
 function saveLocalProduct(p: any) {
   const raw = localStorage.getItem("demo_products");
@@ -82,6 +152,11 @@ export default function Admin() {
     images: "",
     badges: "Bestseller",
     description: "",
+    availability: "",
+    delivery_time: "",
+    warranty: "",
+    highlights: "",
+    offers: "",
   });
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [existing, setExisting] = useState<AdminProduct[]>([]);
@@ -147,7 +222,7 @@ export default function Admin() {
       const { data } = await supabase
         .from("products")
         .select(
-          "id,title,price,mrp,images,badges,brand,wattage,panel_type,category,sku,description,active",
+          "id,title,price,mrp,images,badges,brand,wattage,panel_type,category,sku,description,active,availability,delivery_time,warranty,highlights,offers",
         )
         .order("created_at", { ascending: false });
       const mapped: AdminProduct[] = (data || []).map((p: any) => ({
@@ -155,14 +230,23 @@ export default function Admin() {
         title: p.title,
         price: p.price,
         mrp: p.mrp,
-        images: p.images ?? [],
-        badges: p.badges ?? [],
+        images: Array.isArray(p.images) ? p.images : [],
+        badges: Array.isArray(p.badges) ? p.badges : [],
         brand: p.brand ?? null,
         wattage: p.wattage ?? null,
         panel_type: p.panel_type ?? null,
         category: p.category ?? "panel",
         sku: p.sku ?? null,
         description: p.description ?? null,
+        availability: p.availability ?? null,
+        delivery_time: p.delivery_time ?? null,
+        warranty: p.warranty ?? null,
+        highlights: Array.isArray(p.highlights) ? p.highlights : [],
+        offers: Array.isArray(p.offers)
+          ? p.offers.map((offer: any, index: number) =>
+              ensureOfferShape(offer, index),
+            )
+          : [],
         active: Boolean(p.active ?? true),
       }));
       setExisting(mapped);
@@ -186,7 +270,7 @@ export default function Admin() {
       const { data: prodFull } = await supabase
         .from("products")
         .select(
-          "id,title,price,mrp,images,badges,brand,wattage,panel_type,category,sku,description,active",
+          "id,title,price,mrp,images,badges,brand,wattage,panel_type,category,sku,description,active,availability,delivery_time,warranty,highlights,offers",
         )
         .order("created_at", { ascending: false });
       const mapped: AdminProduct[] = (prodFull || []).map((p: any) => ({
@@ -194,14 +278,23 @@ export default function Admin() {
         title: p.title,
         price: p.price,
         mrp: p.mrp,
-        images: p.images ?? [],
-        badges: p.badges ?? [],
+        images: Array.isArray(p.images) ? p.images : [],
+        badges: Array.isArray(p.badges) ? p.badges : [],
         brand: p.brand ?? null,
         wattage: p.wattage ?? null,
         panel_type: p.panel_type ?? null,
         category: p.category ?? "panel",
         sku: p.sku ?? null,
         description: p.description ?? null,
+        availability: p.availability ?? null,
+        delivery_time: p.delivery_time ?? null,
+        warranty: p.warranty ?? null,
+        highlights: Array.isArray(p.highlights) ? p.highlights : [],
+        offers: Array.isArray(p.offers)
+          ? p.offers.map((offer: any, index: number) =>
+              ensureOfferShape(offer, index),
+            )
+          : [],
         active: Boolean(p.active ?? true),
       }));
       setExisting(mapped);
@@ -348,6 +441,9 @@ export default function Admin() {
 
   const addProduct = async () => {
     const uploaded = await uploadImagesIfNeeded();
+    const badgeList = normaliseTextList(product.badges ?? "");
+    const highlightList = normaliseTextList(product.highlights ?? "");
+    const offersList = parseOffersInput(product.offers ?? "");
     const payload: any = {
       id: crypto.randomUUID(),
       title: product.title,
@@ -364,23 +460,22 @@ export default function Admin() {
           : []),
         ...uploaded,
       ],
-      badges: product.badges
-        ? product.badges.split(",").map((s) => s.trim())
-        : [],
+      badges: badgeList,
       description: product.description || null,
+      availability: product.availability || null,
+      delivery_time: product.delivery_time || null,
+      warranty: product.warranty || null,
+      highlights: highlightList,
+      offers: offersList,
       active: true,
     };
 
     if (!isSupabaseConfigured || !supabase) {
       saveLocalProduct({
-        id: payload.id,
-        title: payload.title,
-        price: payload.price,
-        mrp: payload.mrp,
+        ...payload,
         image:
           payload.images?.[0] ||
           "https://images.unsplash.com/photo-1584270354949-1f2f7d1c1447?q=80&w=1200&auto=format&fit=crop",
-        badges: payload.badges,
       });
       setExisting((prev) => [
         {
@@ -426,6 +521,11 @@ export default function Admin() {
         images: p.images,
         badges: p.badges,
         description: p.description,
+        availability: p.availability,
+        delivery_time: p.delivery_time,
+        warranty: p.warranty,
+        highlights: p.highlights,
+        offers: p.offers,
         active: p.active,
       })
       .eq("id", p.id);
@@ -887,9 +987,47 @@ export default function Admin() {
 
           <input
             className="input sm:col-span-2"
-            placeholder="Badges (comma separated)"
+            placeholder="Badges (comma or newline separated)"
             value={product.badges}
             onChange={(e) => setProduct({ ...product, badges: e.target.value })}
+          />
+          <input
+            className="input sm:col-span-2"
+            placeholder="Availability (e.g. In stock, Ships in 2 days)"
+            value={product.availability}
+            onChange={(e) =>
+              setProduct({ ...product, availability: e.target.value })
+            }
+          />
+          <input
+            className="input"
+            placeholder="Delivery timeline"
+            value={product.delivery_time}
+            onChange={(e) =>
+              setProduct({ ...product, delivery_time: e.target.value })
+            }
+          />
+          <input
+            className="input"
+            placeholder="Warranty summary"
+            value={product.warranty}
+            onChange={(e) =>
+              setProduct({ ...product, warranty: e.target.value })
+            }
+          />
+          <textarea
+            className="input sm:col-span-2"
+            placeholder={"Highlights (one per line)"}
+            value={product.highlights}
+            onChange={(e) =>
+              setProduct({ ...product, highlights: e.target.value })
+            }
+          />
+          <textarea
+            className="input sm:col-span-2"
+            placeholder={"Offers (JSON array or one offer title per line)"}
+            value={product.offers}
+            onChange={(e) => setProduct({ ...product, offers: e.target.value })}
           />
           <textarea
             className="input sm:col-span-2"
@@ -900,6 +1038,11 @@ export default function Admin() {
             }
           />
         </div>
+        <p className="text-xs text-muted-foreground">
+          Offers accept a JSON array of objects with keys like title,
+          discountType (flat/percentage), discountValue, couponCode, badge,
+          terms. Leave blank to reuse defaults.
+        </p>
         <Button onClick={addProduct}>Add product</Button>
       </div>
 
@@ -1119,45 +1262,170 @@ function ProductRow({
   onDelete: (id: string) => void;
 }) {
   const [local, setLocal] = useState<AdminProduct>(p);
-  useEffect(() => setLocal(p), [p]);
+  const [badgesText, setBadgesText] = useState((p.badges || []).join(", "));
+  const [highlightsText, setHighlightsText] = useState(
+    (p.highlights || []).join("\n"),
+  );
+  const [offersText, setOffersText] = useState(formatOffersInput(p.offers));
+
+  useEffect(() => {
+    setLocal(p);
+    setBadgesText((p.badges || []).join(", "));
+    setHighlightsText((p.highlights || []).join("\n"));
+    setOffersText(formatOffersInput(p.offers));
+  }, [p]);
 
   return (
-    <div className="grid gap-3 rounded-lg border border-border p-3 sm:grid-cols-6">
-      <input
-        className="input sm:col-span-2"
-        value={local.title}
-        onChange={(e) => setLocal({ ...local, title: e.target.value })}
-      />
-      <input
+    <div className="grid gap-3 rounded-lg border border-border p-3">
+      <div className="grid gap-3 sm:grid-cols-3">
+        <input
+          className="input sm:col-span-2"
+          placeholder="Title"
+          value={local.title}
+          onChange={(e) => setLocal({ ...local, title: e.target.value })}
+        />
+        <input
+          className="input"
+          type="number"
+          placeholder="Price"
+          value={local.price}
+          onChange={(e) =>
+            setLocal({ ...local, price: Number(e.target.value) })
+          }
+        />
+        <input
+          className="input"
+          type="number"
+          placeholder="MRP"
+          value={local.mrp ?? 0}
+          onChange={(e) =>
+            setLocal({ ...local, mrp: Number(e.target.value) || null })
+          }
+        />
+        <input
+          className="input"
+          placeholder="Brand"
+          value={local.brand ?? ""}
+          onChange={(e) =>
+            setLocal({ ...local, brand: e.target.value || null })
+          }
+        />
+        <input
+          className="input"
+          placeholder="Category"
+          value={local.category}
+          onChange={(e) => setLocal({ ...local, category: e.target.value })}
+        />
+        <input
+          className="input"
+          placeholder="SKU"
+          value={local.sku ?? ""}
+          onChange={(e) => setLocal({ ...local, sku: e.target.value || null })}
+        />
+        <input
+          className="input"
+          placeholder="Panel type"
+          value={local.panel_type ?? ""}
+          onChange={(e) =>
+            setLocal({ ...local, panel_type: e.target.value || null })
+          }
+        />
+        <input
+          className="input"
+          type="number"
+          placeholder="Wattage"
+          value={local.wattage ?? 0}
+          onChange={(e) =>
+            setLocal({ ...local, wattage: Number(e.target.value) || null })
+          }
+        />
+        <input
+          className="input"
+          placeholder="Availability"
+          value={local.availability ?? ""}
+          onChange={(e) =>
+            setLocal({ ...local, availability: e.target.value || null })
+          }
+        />
+        <input
+          className="input"
+          placeholder="Delivery timeline"
+          value={local.delivery_time ?? ""}
+          onChange={(e) =>
+            setLocal({ ...local, delivery_time: e.target.value || null })
+          }
+        />
+        <input
+          className="input"
+          placeholder="Warranty"
+          value={local.warranty ?? ""}
+          onChange={(e) =>
+            setLocal({ ...local, warranty: e.target.value || null })
+          }
+        />
+        <input
+          className="input sm:col-span-3"
+          placeholder="Image URLs (comma separated)"
+          value={(local.images || []).join(", ")}
+          onChange={(e) =>
+            setLocal({
+              ...local,
+              images: e.target.value
+                .split(",")
+                .map((s) => s.trim())
+                .filter(Boolean),
+            })
+          }
+        />
+        <input
+          className="input sm:col-span-3"
+          placeholder="Badges (comma or newline separated)"
+          value={badgesText}
+          onChange={(e) => {
+            const value = e.target.value;
+            setBadgesText(value);
+            setLocal({
+              ...local,
+              badges: normaliseTextList(value),
+            });
+          }}
+        />
+      </div>
+      <textarea
         className="input"
-        type="number"
-        value={local.price}
-        onChange={(e) => setLocal({ ...local, price: Number(e.target.value) })}
-      />
-      <input
-        className="input"
-        placeholder="MRP"
-        type="number"
-        value={local.mrp ?? 0}
+        placeholder="Description"
+        value={local.description ?? ""}
         onChange={(e) =>
-          setLocal({ ...local, mrp: Number(e.target.value) || null })
+          setLocal({ ...local, description: e.target.value || null })
         }
       />
-      <input
-        className="input sm:col-span-2"
-        placeholder="Image URLs (comma)"
-        value={(local.images || []).join(", ")}
-        onChange={(e) =>
-          setLocal({
-            ...local,
-            images: e.target.value
-              .split(",")
-              .map((s) => s.trim())
-              .filter(Boolean),
-          })
-        }
+      <textarea
+        className="input"
+        placeholder="Highlights (one per line)"
+        value={highlightsText}
+        onChange={(e) => {
+          const value = e.target.value;
+          setHighlightsText(value);
+          setLocal({ ...local, highlights: normaliseTextList(value) });
+        }}
       />
-      <div className="sm:col-span-6 flex items-center gap-2">
+      <textarea
+        className="input"
+        placeholder="Offers (JSON array or one title per line)"
+        value={offersText}
+        onChange={(e) => {
+          const value = e.target.value;
+          setOffersText(value);
+          setLocal({ ...local, offers: parseOffersInput(value) });
+        }}
+      />
+      <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+        <span>
+          Offers accept keys: title, discountType, discountValue, couponCode,
+          badge, terms.
+        </span>
+      </div>
+      <div className="flex items-center gap-2">
         <label className="text-sm text-muted-foreground">
           <input
             type="checkbox"
@@ -1168,7 +1436,19 @@ function ProductRow({
           Active
         </label>
         <div className="ml-auto flex gap-2">
-          <Button variant="outline" onClick={() => onSave(local)}>
+          <Button
+            variant="outline"
+            onClick={() => {
+              const next: AdminProduct = {
+                ...local,
+                badges: normaliseTextList(badgesText),
+                highlights: normaliseTextList(highlightsText),
+                offers: parseOffersInput(offersText),
+              };
+              setLocal(next);
+              onSave(next);
+            }}
+          >
             Save
           </Button>
           <Button variant="destructive" onClick={() => onDelete(local.id)}>
