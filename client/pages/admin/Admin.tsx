@@ -3,6 +3,9 @@ import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "react-router-dom";
 import { toast } from "sonner";
+import type { OfferDetail } from "@/lib/offers";
+
+type AdminOffer = OfferDetail;
 
 export type AdminProduct = {
   id: string;
@@ -17,11 +20,78 @@ export type AdminProduct = {
   images: string[];
   badges: string[];
   description?: string | null;
+  availability?: string | null;
+  delivery_time?: string | null;
+  warranty?: string | null;
+  highlights?: string[];
+  offers?: AdminOffer[];
   active: boolean;
 };
 
 const ADMIN_PASSWORD =
   (import.meta.env.VITE_ADMIN_PASSWORD as string | undefined) || undefined;
+
+function normaliseTextList(value: string): string[] {
+  return value
+    .split(/[\n,]+/)
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+}
+
+function generateOfferId(prefix: string, index: number) {
+  if (typeof crypto !== "undefined" && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  return `${prefix}-${Date.now()}-${index}`;
+}
+
+function ensureOfferShape(value: any, index: number): AdminOffer {
+  const discountTypeRaw = value?.discountType ?? value?.discount_type;
+  const discountType =
+    discountTypeRaw === "percentage" || discountTypeRaw === "percent"
+      ? "percentage"
+      : "flat";
+  const discountValueRaw =
+    value?.discountValue ?? value?.discount_value ?? value?.value ?? 0;
+  const discountValue = Number.isFinite(Number(discountValueRaw))
+    ? Number(discountValueRaw)
+    : 0;
+  return {
+    id: value?.id ?? generateOfferId("offer", index),
+    title: value?.title ?? value?.name ?? `Offer ${index + 1}`,
+    description: value?.description ?? value?.details ?? null,
+    couponCode: value?.couponCode ?? value?.coupon_code ?? null,
+    terms: value?.terms ?? value?.conditions ?? null,
+    badge: value?.badge ?? null,
+    discountType,
+    discountValue,
+  };
+}
+
+function parseOffersInput(input: string): AdminOffer[] {
+  const trimmed = input.trim();
+  if (!trimmed) return [];
+  try {
+    const parsed = JSON.parse(trimmed);
+    if (Array.isArray(parsed)) {
+      return parsed.map((item, index) => ensureOfferShape(item, index));
+    }
+  } catch {
+    // fall back to simple list parsing
+  }
+  return normaliseTextList(input).map((title, index) =>
+    ensureOfferShape({ title, discountType: "flat", discountValue: 0 }, index),
+  );
+}
+
+function formatOffersInput(offers?: AdminOffer[]): string {
+  if (!offers || offers.length === 0) return "";
+  try {
+    return JSON.stringify(offers, null, 2);
+  } catch {
+    return offers.map((offer) => offer.title).join("\n");
+  }
+}
 
 function saveLocalProduct(p: any) {
   const raw = localStorage.getItem("demo_products");
