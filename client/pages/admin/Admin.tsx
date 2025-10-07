@@ -513,6 +513,11 @@ export default function Admin() {
         images: p.images,
         badges: p.badges,
         description: p.description,
+        availability: p.availability,
+        delivery_time: p.delivery_time,
+        warranty: p.warranty,
+        highlights: p.highlights,
+        offers: p.offers,
         active: p.active,
       })
       .eq("id", p.id);
