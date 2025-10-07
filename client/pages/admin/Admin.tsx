@@ -1255,42 +1255,152 @@ function ProductRow({
   useEffect(() => setLocal(p), [p]);
 
   return (
-    <div className="grid gap-3 rounded-lg border border-border p-3 sm:grid-cols-6">
-      <input
-        className="input sm:col-span-2"
-        value={local.title}
-        onChange={(e) => setLocal({ ...local, title: e.target.value })}
-      />
-      <input
+    <div className="grid gap-3 rounded-lg border border-border p-3">
+      <div className="grid gap-3 sm:grid-cols-3">
+        <input
+          className="input sm:col-span-2"
+          placeholder="Title"
+          value={local.title}
+          onChange={(e) => setLocal({ ...local, title: e.target.value })}
+        />
+        <input
+          className="input"
+          type="number"
+          placeholder="Price"
+          value={local.price}
+          onChange={(e) => setLocal({ ...local, price: Number(e.target.value) })}
+        />
+        <input
+          className="input"
+          type="number"
+          placeholder="MRP"
+          value={local.mrp ?? 0}
+          onChange={(e) =>
+            setLocal({ ...local, mrp: Number(e.target.value) || null })
+          }
+        />
+        <input
+          className="input"
+          placeholder="Brand"
+          value={local.brand ?? ""}
+          onChange={(e) => setLocal({ ...local, brand: e.target.value || null })}
+        />
+        <input
+          className="input"
+          placeholder="Category"
+          value={local.category}
+          onChange={(e) => setLocal({ ...local, category: e.target.value })}
+        />
+        <input
+          className="input"
+          placeholder="SKU"
+          value={local.sku ?? ""}
+          onChange={(e) => setLocal({ ...local, sku: e.target.value || null })}
+        />
+        <input
+          className="input"
+          placeholder="Panel type"
+          value={local.panel_type ?? ""}
+          onChange={(e) =>
+            setLocal({ ...local, panel_type: e.target.value || null })
+          }
+        />
+        <input
+          className="input"
+          type="number"
+          placeholder="Wattage"
+          value={local.wattage ?? 0}
+          onChange={(e) =>
+            setLocal({ ...local, wattage: Number(e.target.value) || null })
+          }
+        />
+        <input
+          className="input"
+          placeholder="Availability"
+          value={local.availability ?? ""}
+          onChange={(e) =>
+            setLocal({ ...local, availability: e.target.value || null })
+          }
+        />
+        <input
+          className="input"
+          placeholder="Delivery timeline"
+          value={local.delivery_time ?? ""}
+          onChange={(e) =>
+            setLocal({ ...local, delivery_time: e.target.value || null })
+          }
+        />
+        <input
+          className="input"
+          placeholder="Warranty"
+          value={local.warranty ?? ""}
+          onChange={(e) =>
+            setLocal({ ...local, warranty: e.target.value || null })
+          }
+        />
+        <input
+          className="input sm:col-span-3"
+          placeholder="Image URLs (comma separated)"
+          value={(local.images || []).join(", ")}
+          onChange={(e) =>
+            setLocal({
+              ...local,
+              images: e.target.value
+                .split(",")
+                .map((s) => s.trim())
+                .filter(Boolean),
+            })
+          }
+        />
+        <input
+          className="input sm:col-span-3"
+          placeholder="Badges (comma or newline separated)"
+          value={(badgesText)}
+          onChange={(e) => {
+            const value = e.target.value;
+            setBadgesText(value);
+            setLocal({
+              ...local,
+              badges: normaliseTextList(value),
+            });
+          }}
+        />
+      </div>
+      <textarea
         className="input"
-        type="number"
-        value={local.price}
-        onChange={(e) => setLocal({ ...local, price: Number(e.target.value) })}
-      />
-      <input
-        className="input"
-        placeholder="MRP"
-        type="number"
-        value={local.mrp ?? 0}
+        placeholder="Description"
+        value={local.description ?? ""}
         onChange={(e) =>
-          setLocal({ ...local, mrp: Number(e.target.value) || null })
+          setLocal({ ...local, description: e.target.value || null })
         }
       />
-      <input
-        className="input sm:col-span-2"
-        placeholder="Image URLs (comma)"
-        value={(local.images || []).join(", ")}
-        onChange={(e) =>
-          setLocal({
-            ...local,
-            images: e.target.value
-              .split(",")
-              .map((s) => s.trim())
-              .filter(Boolean),
-          })
-        }
+      <textarea
+        className="input"
+        placeholder="Highlights (one per line)"
+        value={highlightsText}
+        onChange={(e) => {
+          const value = e.target.value;
+          setHighlightsText(value);
+          setLocal({ ...local, highlights: normaliseTextList(value) });
+        }}
       />
-      <div className="sm:col-span-6 flex items-center gap-2">
+      <textarea
+        className="input"
+        placeholder="Offers (JSON array or one title per line)"
+        value={offersText}
+        onChange={(e) => {
+          const value = e.target.value;
+          setOffersText(value);
+          setLocal({ ...local, offers: parseOffersInput(value) });
+        }}
+      />
+      <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+        <span>
+          Offers accept keys: title, discountType, discountValue, couponCode,
+          badge, terms.
+        </span>
+      </div>
+      <div className="flex items-center gap-2">
         <label className="text-sm text-muted-foreground">
           <input
             type="checkbox"
@@ -1301,7 +1411,17 @@ function ProductRow({
           Active
         </label>
         <div className="ml-auto flex gap-2">
-          <Button variant="outline" onClick={() => onSave(local)}>
+          <Button
+            variant="outline"
+            onClick={() =>
+              onSave({
+                ...local,
+                badges: normaliseTextList(badgesText),
+                highlights: normaliseTextList(highlightsText),
+                offers: parseOffersInput(offersText),
+              })
+            }
+          >
             Save
           </Button>
           <Button variant="destructive" onClick={() => onDelete(local.id)}>
