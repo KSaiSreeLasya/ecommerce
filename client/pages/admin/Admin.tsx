@@ -464,14 +464,10 @@ export default function Admin() {
 
     if (!isSupabaseConfigured || !supabase) {
       saveLocalProduct({
-        id: payload.id,
-        title: payload.title,
-        price: payload.price,
-        mrp: payload.mrp,
+        ...payload,
         image:
           payload.images?.[0] ||
           "https://images.unsplash.com/photo-1584270354949-1f2f7d1c1447?q=80&w=1200&auto=format&fit=crop",
-        badges: payload.badges,
       });
       setExisting((prev) => [
         {
