@@ -152,6 +152,11 @@ export default function Admin() {
     images: "",
     badges: "Bestseller",
     description: "",
+    availability: "",
+    delivery_time: "",
+    warranty: "",
+    highlights: "",
+    offers: "",
   });
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [existing, setExisting] = useState<AdminProduct[]>([]);
