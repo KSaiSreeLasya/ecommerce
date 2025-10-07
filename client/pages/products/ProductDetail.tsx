@@ -773,7 +773,7 @@ export default function ProductDetail() {
       mrp: product.mrp ?? null,
       offer: selectedOffer,
     });
-    if (redirectToCart) navigate("/cart");
+    if (redirectToCart) navigate("/checkout");
   };
 
   return (
@@ -845,10 +845,18 @@ export default function ProductDetail() {
                 <Truck className="h-4 w-4 text-primary" />
                 Free delivery
               </span>
-              <span className="inline-flex items-center gap-1">
+              <button
+                type="button"
+                onClick={async () => {
+                  const url = `${window.location.origin}/products/${product.id}`;
+                  const { shareOrCopy } = await import("@/lib/share");
+                  await shareOrCopy(product.title, url);
+                }}
+                className="inline-flex items-center gap-1 hover:text-foreground"
+              >
                 <Share2 className="h-4 w-4 text-primary" />
                 Share
-              </span>
+              </button>
             </div>
           </div>
           <div className="space-y-2">

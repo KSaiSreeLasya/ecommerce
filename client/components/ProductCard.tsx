@@ -1,7 +1,9 @@
-import { Tag } from "lucide-react";
+import { Share2, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/state/cart";
 import { Link, useNavigate } from "react-router-dom";
+import { shareOrCopy } from "@/lib/share";
+import { toast } from "sonner";
 
 export type Product = {
   id: string;
@@ -70,37 +72,51 @@ export function ProductCard({ product }: { product: Product }) {
             )}
           </div>
         </div>
-        <div className="mt-3 flex items-center justify-between">
-          <Button
-            className="h-9 px-3"
-            onClick={() =>
-              add({
-                id: product.id,
-                title: product.title,
-                price: product.price,
-                image: product.image,
-                mrp: product.mrp ?? null,
-              })
-            }
-          >
-            Add to cart
-          </Button>
-          <Button
-            variant="outline"
-            className="h-9 px-3"
-            onClick={() => {
-              add({
-                id: product.id,
-                title: product.title,
-                price: product.price,
-                image: product.image,
-                mrp: product.mrp ?? null,
-              });
-              navigate("/cart");
+        <div className="mt-3 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <Button
+              className="h-9 px-3"
+              onClick={() =>
+                add({
+                  id: product.id,
+                  title: product.title,
+                  price: product.price,
+                  image: product.image,
+                  mrp: product.mrp ?? null,
+                })
+              }
+            >
+              Add to cart
+            </Button>
+            <Button
+              variant="outline"
+              className="h-9 px-3"
+              onClick={() => {
+                add({
+                  id: product.id,
+                  title: product.title,
+                  price: product.price,
+                  image: product.image,
+                  mrp: product.mrp ?? null,
+                });
+                navigate("/checkout");
+              }}
+            >
+              Buy now
+            </Button>
+          </div>
+          <button
+            type="button"
+            className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+            onClick={async () => {
+              const url = `${window.location.origin}/products/${product.id}`;
+              await shareOrCopy(product.title, url);
+              toast.success("Share ready");
             }}
+            aria-label="Share product"
           >
-            Buy now
-          </Button>
+            <Share2 className="h-3.5 w-3.5" /> Share
+          </button>
         </div>
       </div>
     </div>

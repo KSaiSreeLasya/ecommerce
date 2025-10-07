@@ -340,7 +340,48 @@ export default function Cart() {
       );
     };
 
+    // If Razorpay (server) is configured, try to use it
+    const keyId = import.meta.env.VITE_RAZORPAY_KEY_ID as string | undefined;
+    let useRazorpay = Boolean(keyId);
+    try {
+      const resp = await fetch("/api/payments/razorpay/config");
+      const json = await resp.json();
+      useRazorpay = useRazorpay && Boolean(json.configured);
+    } catch {
+      // ignore
+    }
+
     if (!isSupabaseConfigured || !supabase) {
+      if (useRazorpay) {
+        try {
+          const paise = Math.max(1, Math.round(orderTotal * 100));
+          const createResp = await fetch(
+            "/api/payments/razorpay/create-order",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ amount: paise, currency: "INR" }),
+            },
+          );
+          const data = await createResp.json();
+          if (createResp.ok && data.order?.id) {
+            const { openCheckout } = await import("@/lib/razorpay");
+            await openCheckout({
+              key: keyId!,
+              amount: data.order.amount,
+              currency: data.order.currency,
+              order_id: data.order.id,
+              name: "Solar Store",
+              description: "Order payment",
+              prefill: { email },
+              handler: () => fallbackLocal("Payment success (demo)"),
+            });
+            return;
+          }
+        } catch (err) {
+          console.warn("Razorpay create/open failed", err);
+        }
+      }
       fallbackLocal();
       return;
     }
@@ -454,6 +495,52 @@ export default function Cart() {
       await supabase.from("analytics").upsert(payload);
     } catch (analyticsError) {
       console.warn("analytics upsert failed", analyticsError);
+    }
+
+    // If Razorpay configured, take payment now. On success mark order paid.
+    if (useRazorpay) {
+      try {
+        const paise = Math.max(1, Math.round(orderTotal * 100));
+        const createResp = await fetch("/api/payments/razorpay/create-order", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            amount: paise,
+            currency: "INR",
+            receipt: orderId,
+          }),
+        });
+        const data = await createResp.json();
+        if (createResp.ok && data.order?.id) {
+          const { openCheckout } = await import("@/lib/razorpay");
+          await openCheckout({
+            key: keyId!,
+            amount: data.order.amount,
+            currency: data.order.currency,
+            order_id: data.order.id,
+            name: "Solar Store",
+            description: `Order ${orderId}`,
+            prefill: { email },
+            handler: async () => {
+              await supabase
+                .from("orders")
+                .update({ status: "paid" })
+                .eq("id", orderId!);
+              clear();
+              setSuccess({
+                open: true,
+                orderId: orderId!,
+                items: items.length,
+                total: orderTotal,
+              });
+              toast.success("Payment successful");
+            },
+          });
+          return;
+        }
+      } catch (err) {
+        console.warn("Razorpay flow failed", err);
+      }
     }
 
     clear();
@@ -687,6 +774,10 @@ export default function Cart() {
               <Button className="w-full" onClick={placeOrder}>
                 Proceed to checkout
               </Button>
+              <p className="text-xs text-muted-foreground">
+                Payments via Razorpay when configured. Otherwise a demo local
+                checkout is used.
+              </p>
               <p className="text-xs text-muted-foreground">
                 <Truck className="mr-1 inline h-4 w-4 text-primary" />
                 Delivery timelines vary by region. Estimate shipping during
