@@ -979,9 +979,47 @@ export default function Admin() {
 
           <input
             className="input sm:col-span-2"
-            placeholder="Badges (comma separated)"
+            placeholder="Badges (comma or newline separated)"
             value={product.badges}
             onChange={(e) => setProduct({ ...product, badges: e.target.value })}
+          />
+          <input
+            className="input sm:col-span-2"
+            placeholder="Availability (e.g. In stock, Ships in 2 days)"
+            value={product.availability}
+            onChange={(e) =>
+              setProduct({ ...product, availability: e.target.value })
+            }
+          />
+          <input
+            className="input"
+            placeholder="Delivery timeline"
+            value={product.delivery_time}
+            onChange={(e) =>
+              setProduct({ ...product, delivery_time: e.target.value })
+            }
+          />
+          <input
+            className="input"
+            placeholder="Warranty summary"
+            value={product.warranty}
+            onChange={(e) =>
+              setProduct({ ...product, warranty: e.target.value })
+            }
+          />
+          <textarea
+            className="input sm:col-span-2"
+            placeholder={"Highlights (one per line)"}
+            value={product.highlights}
+            onChange={(e) =>
+              setProduct({ ...product, highlights: e.target.value })
+            }
+          />
+          <textarea
+            className="input sm:col-span-2"
+            placeholder={"Offers (JSON array or one offer title per line)"}
+            value={product.offers}
+            onChange={(e) => setProduct({ ...product, offers: e.target.value })}
           />
           <textarea
             className="input sm:col-span-2"
@@ -992,6 +1030,9 @@ export default function Admin() {
             }
           />
         </div>
+        <p className="text-xs text-muted-foreground">
+          Offers accept a JSON array of objects with keys like title, discountType (flat/percentage), discountValue, couponCode, badge, terms. Leave blank to reuse defaults.
+        </p>
         <Button onClick={addProduct}>Add product</Button>
       </div>
 
