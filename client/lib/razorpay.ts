@@ -25,7 +25,8 @@ export type RazorpayOpenOptions = {
   order_id: string;
   prefill?: { name?: string; email?: string; contact?: string };
   notes?: Record<string, string>;
-};
+  handler?: (response: any) => void;
+} & Record<string, any>;
 
 export async function openCheckout(options: RazorpayOpenOptions) {
   const loaded = await loadRazorpay();
