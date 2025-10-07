@@ -30,7 +30,8 @@ export type RazorpayOpenOptions = {
 
 export async function openCheckout(options: RazorpayOpenOptions) {
   const loaded = await loadRazorpay();
-  if (!loaded || !window.Razorpay) throw new Error("Razorpay SDK failed to load");
+  if (!loaded || !window.Razorpay)
+    throw new Error("Razorpay SDK failed to load");
   const rzp = new window.Razorpay(options);
   rzp.open();
 }

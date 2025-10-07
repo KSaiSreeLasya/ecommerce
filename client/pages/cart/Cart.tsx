@@ -374,7 +374,7 @@ export default function Cart() {
               name: "Solar Store",
               description: "Order payment",
               prefill: { email },
-              handler: () => fallbackLocal("Payment success (demo)")
+              handler: () => fallbackLocal("Payment success (demo)"),
             });
             return;
           }
@@ -501,14 +501,15 @@ export default function Cart() {
     if (useRazorpay) {
       try {
         const paise = Math.max(1, Math.round(orderTotal * 100));
-        const createResp = await fetch(
-          "/api/payments/razorpay/create-order",
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ amount: paise, currency: "INR", receipt: orderId }),
-          },
-        );
+        const createResp = await fetch("/api/payments/razorpay/create-order", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            amount: paise,
+            currency: "INR",
+            receipt: orderId,
+          }),
+        });
         const data = await createResp.json();
         if (createResp.ok && data.order?.id) {
           const { openCheckout } = await import("@/lib/razorpay");

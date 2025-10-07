@@ -100,10 +100,10 @@ export function ProductCard({ product }: { product: Product }) {
                   mrp: product.mrp ?? null,
                 });
                 navigate("/checkout");
-            }}
-          >
-            Buy now
-          </Button>
+              }}
+            >
+              Buy now
+            </Button>
           </div>
           <button
             type="button"

@@ -28,7 +28,8 @@ export function saveAddresses(addrs: Address[]) {
 export function upsertAddress(addr: Address) {
   const arr = readAddresses();
   const idx = arr.findIndex((a) => a.id === addr.id);
-  if (idx >= 0) arr[idx] = addr; else arr.unshift(addr);
+  if (idx >= 0) arr[idx] = addr;
+  else arr.unshift(addr);
   saveAddresses(arr);
 }
 
