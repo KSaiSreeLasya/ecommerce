@@ -1434,14 +1434,16 @@ function ProductRow({
         <div className="ml-auto flex gap-2">
           <Button
             variant="outline"
-            onClick={() =>
-              onSave({
+            onClick={() => {
+              const next: AdminProduct = {
                 ...local,
                 badges: normaliseTextList(badgesText),
                 highlights: normaliseTextList(highlightsText),
                 offers: parseOffersInput(offersText),
-              })
-            }
+              };
+              setLocal(next);
+              onSave(next);
+            }}
           >
             Save
           </Button>
