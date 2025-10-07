@@ -1376,7 +1376,7 @@ function ProductRow({
         <input
           className="input sm:col-span-3"
           placeholder="Badges (comma or newline separated)"
-          value={(badgesText)}
+          value={badgesText}
           onChange={(e) => {
             const value = e.target.value;
             setBadgesText(value);
