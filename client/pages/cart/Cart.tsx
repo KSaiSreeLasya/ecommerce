@@ -688,6 +688,10 @@ export default function Cart() {
                 Proceed to checkout
               </Button>
               <p className="text-xs text-muted-foreground">
+                Payments via Razorpay when configured. Otherwise a demo local
+                checkout is used.
+              </p>
+              <p className="text-xs text-muted-foreground">
                 <Truck className="mr-1 inline h-4 w-4 text-primary" />
                 Delivery timelines vary by region. Estimate shipping during
                 checkout.
