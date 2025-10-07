@@ -459,7 +459,7 @@ export default function Cart() {
     clear();
     setSuccess({
       open: true,
-      orderId: order.id,
+      orderId,
       items: items.length,
       total: orderTotal,
     });
