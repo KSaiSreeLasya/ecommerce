@@ -99,11 +99,11 @@ export function ProductCard({ product }: { product: Product }) {
                   image: product.image,
                   mrp: product.mrp ?? null,
                 });
-                navigate("/cart");
-              }}
-            >
-              Buy now
-            </Button>
+                navigate("/checkout");
+            }}
+          >
+            Buy now
+          </Button>
           </div>
           <button
             type="button"

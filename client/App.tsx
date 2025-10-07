@@ -20,6 +20,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import Disclaimer from "./pages/Disclaimer";
 import Layout from "@/components/layout/Layout";
 import ProductDetail from "./pages/products/ProductDetail";
+import Checkout from "./pages/checkout/Checkout";
 
 const App = () => (
   <TooltipProvider>
@@ -32,6 +33,7 @@ const App = () => (
           <Route path="products" element={<Products />} />
           <Route path="products/:id" element={<ProductDetail />} />
           <Route path="cart" element={<Cart />} />
+          <Route path="checkout" element={<Checkout />} />
           <Route path="admin" element={<Admin />} />
           <Route path="auth" element={<Auth />} />
           <Route path="about" element={<About />} />

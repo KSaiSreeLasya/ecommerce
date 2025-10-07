@@ -773,7 +773,7 @@ export default function ProductDetail() {
       mrp: product.mrp ?? null,
       offer: selectedOffer,
     });
-    if (redirectToCart) navigate("/cart");
+    if (redirectToCart) navigate("/checkout");
   };
 
   return (
