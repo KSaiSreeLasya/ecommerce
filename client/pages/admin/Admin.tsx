@@ -433,6 +433,9 @@ export default function Admin() {
 
   const addProduct = async () => {
     const uploaded = await uploadImagesIfNeeded();
+    const badgeList = normaliseTextList(product.badges ?? "");
+    const highlightList = normaliseTextList(product.highlights ?? "");
+    const offersList = parseOffersInput(product.offers ?? "");
     const payload: any = {
       id: crypto.randomUUID(),
       title: product.title,
@@ -449,10 +452,13 @@ export default function Admin() {
           : []),
         ...uploaded,
       ],
-      badges: product.badges
-        ? product.badges.split(",").map((s) => s.trim())
-        : [],
+      badges: badgeList,
       description: product.description || null,
+      availability: product.availability || null,
+      delivery_time: product.delivery_time || null,
+      warranty: product.warranty || null,
+      highlights: highlightList,
+      offers: offersList,
       active: true,
     };
 
