@@ -222,7 +222,7 @@ export default function Admin() {
       const { data } = await supabase
         .from("products")
         .select(
-          "id,title,price,mrp,images,badges,brand,wattage,panel_type,category,sku,description,active",
+          "id,title,price,mrp,images,badges,brand,wattage,panel_type,category,sku,description,active,availability,delivery_time,warranty,highlights,offers",
         )
         .order("created_at", { ascending: false });
       const mapped: AdminProduct[] = (data || []).map((p: any) => ({
@@ -230,14 +230,19 @@ export default function Admin() {
         title: p.title,
         price: p.price,
         mrp: p.mrp,
-        images: p.images ?? [],
-        badges: p.badges ?? [],
+        images: Array.isArray(p.images) ? p.images : [],
+        badges: Array.isArray(p.badges) ? p.badges : [],
         brand: p.brand ?? null,
         wattage: p.wattage ?? null,
         panel_type: p.panel_type ?? null,
         category: p.category ?? "panel",
         sku: p.sku ?? null,
         description: p.description ?? null,
+        availability: p.availability ?? null,
+        delivery_time: p.delivery_time ?? null,
+        warranty: p.warranty ?? null,
+        highlights: Array.isArray(p.highlights) ? p.highlights : [],
+        offers: Array.isArray(p.offers) ? p.offers : [],
         active: Boolean(p.active ?? true),
       }));
       setExisting(mapped);
@@ -261,7 +266,7 @@ export default function Admin() {
       const { data: prodFull } = await supabase
         .from("products")
         .select(
-          "id,title,price,mrp,images,badges,brand,wattage,panel_type,category,sku,description,active",
+          "id,title,price,mrp,images,badges,brand,wattage,panel_type,category,sku,description,active,availability,delivery_time,warranty,highlights,offers",
         )
         .order("created_at", { ascending: false });
       const mapped: AdminProduct[] = (prodFull || []).map((p: any) => ({
@@ -269,14 +274,19 @@ export default function Admin() {
         title: p.title,
         price: p.price,
         mrp: p.mrp,
-        images: p.images ?? [],
-        badges: p.badges ?? [],
+        images: Array.isArray(p.images) ? p.images : [],
+        badges: Array.isArray(p.badges) ? p.badges : [],
         brand: p.brand ?? null,
         wattage: p.wattage ?? null,
         panel_type: p.panel_type ?? null,
         category: p.category ?? "panel",
         sku: p.sku ?? null,
         description: p.description ?? null,
+        availability: p.availability ?? null,
+        delivery_time: p.delivery_time ?? null,
+        warranty: p.warranty ?? null,
+        highlights: Array.isArray(p.highlights) ? p.highlights : [],
+        offers: Array.isArray(p.offers) ? p.offers : [],
         active: Boolean(p.active ?? true),
       }));
       setExisting(mapped);
