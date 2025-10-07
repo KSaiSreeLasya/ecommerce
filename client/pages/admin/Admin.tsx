@@ -1252,7 +1252,20 @@ function ProductRow({
   onDelete: (id: string) => void;
 }) {
   const [local, setLocal] = useState<AdminProduct>(p);
-  useEffect(() => setLocal(p), [p]);
+  const [badgesText, setBadgesText] = useState(
+    (p.badges || []).join(", "),
+  );
+  const [highlightsText, setHighlightsText] = useState(
+    (p.highlights || []).join("\n"),
+  );
+  const [offersText, setOffersText] = useState(formatOffersInput(p.offers));
+
+  useEffect(() => {
+    setLocal(p);
+    setBadgesText((p.badges || []).join(", "));
+    setHighlightsText((p.highlights || []).join("\n"));
+    setOffersText(formatOffersInput(p.offers));
+  }, [p]);
 
   return (
     <div className="grid gap-3 rounded-lg border border-border p-3">
